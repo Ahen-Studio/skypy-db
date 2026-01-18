@@ -82,4 +82,4 @@ For example, you can use Skypy-db to log information from your Python applicatio
 
 ## License
 
-[MIT](./LICENSE)
+[Apache 2.0](./LICENSE)
