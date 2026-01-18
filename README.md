@@ -51,6 +51,13 @@ The API is only 4 functions:
 
 Learn more on our [Docs](https://ahen.mintlify.app/)
 
+## Use case
+
+For example, you can use Skypy-db to log information from your Python application.
+
+1. Create a custom schema and add the logic to your code.
+2. view your logs in real time on the dashboard.
+
 ## License
 
 [MIT](./LICENSE)
