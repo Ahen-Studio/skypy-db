@@ -48,11 +48,7 @@ pip install skypydb # python client
 
 ## What's next!
 
-- create a declarative schema system to customize the tables
-
-- Add the ability to delete specific data in a table
-
-- Add the ability to update specific data in a table
+- give use ideas!
 
 ## API
 

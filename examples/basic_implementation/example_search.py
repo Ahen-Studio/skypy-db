@@ -27,3 +27,5 @@ results = table.search(
     title=["document"]# search the corresponding data by their title
     #id=["***"]
 )
+for result in results:
+    print(result)
