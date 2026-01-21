@@ -48,11 +48,7 @@ pip install skypydb # python client
 
 ## What's next!
 
-- create a declarative schema system to customize the tables
-
-- Add the ability to delete specific data in a table
-
-- Add the ability to update specific data in a table
+- give use ideas!
 
 ## API
 
@@ -87,15 +83,16 @@ config = {
 }
 
 # Create tables. get_table_from_config(config, table_name="all-my-documents"), delete_table_from_config(config, table_name="all-my-documents") are also available.
-table = client.create_table_from_config(config)# Create all the tables present in the config.
-#table = client.get_table_from_config(config, table_name="all-my-documents")
-#table = client.delete_table_from_config(config, table_name="all-my-documents")
-
-# Add data to a table.
+try:
+    table = client.create_table_from_config(config)# Create all the tables present in the config.
+except Exception:
+    # Tables already exist, that's fine
+    pass
 
 # Retrieve the table before adding any data.
 table = client.get_table_from_config(config, table_name="all-my-documents")
 
+# Add data to a table.
 table.add(
     title=["document"],
     user_id=["user123"],
@@ -103,12 +100,8 @@ table.add(
     id=["auto"]# ids are automatically created by the backend.
 )
 
-# Search results. You can also search the data by the id of the document.
-results = table.search(
-    index="user123",
-    title=["document"]# Search the corresponding data by their title.
-    #id=["***"]
-)
+# Keep the program running so the dashboard stays active
+client.wait()
 ```
 
 - use the api without a custom config
@@ -120,9 +113,14 @@ import skypydb
 client = skypydb.Client(path="./data/skypy.db")
 
 # Create table. get_table, delete_table are also available.
-table = client.create_table("all-my-documents")
-#table = client.get_table("all-my-documents")
-#table = client.delete_table("all-my-documents")
+try:
+    table = client.create_table("all-my-documents")
+except Exception:
+    # Tables already exist, that's fine
+    pass
+
+# Retrieve the table before adding any data.
+table = client.get_table("all-my-documents")
 
 # Add data to the table.
 table.add(
@@ -132,12 +130,42 @@ table.add(
     id=["auto"]# ids are automatically created by the backend
 )
 
-# Search results. You can also search the data by the id of the document
-results = table.search(
-    index="user123",
-    title=["document"]# search the corresponding data by their title
-    #id=["***"]
+# Keep the program running so the dashboard stays active
+client.wait()
+```
+
+## Dashboard
+
+The dashboard starts automatically when you create a client. To keep it running after your operations:
+
+```python
+import skypydb
+
+client = skypydb.Client(path="./data/skypy.db")
+
+# ... your operations here ...
+
+# Keep the dashboard active
+client.wait()  # Dashboard accessible at http://127.0.0.1:3000
+```
+
+**Dashboard options:**
+
+```python
+# Change the dashboard port
+client = skypydb.Client(
+    path="./data/skypy.db",
+    dashboard_port=8080
 )
+
+# Disable auto-start
+client = skypydb.Client(
+    path="./data/skypy.db",
+    auto_start_dashboard=False
+)
+
+# Start manually later
+client.start_dashboard()
 ```
 
 Learn more on our [Docs](https://ahen.mintlify.app/)

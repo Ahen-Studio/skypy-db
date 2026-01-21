@@ -3,6 +3,8 @@ Client API for SkypyDB.
 """
 
 import threading
+import time
+import os
 from typing import Any, Dict, Optional, Union
 
 from ..db.database import Database
@@ -16,7 +18,10 @@ class Client:
     """
 
     def __init__(
-        self, path: str, dashboard_port: int = 3000, auto_start_dashboard: bool = True
+        self,
+        path: str, 
+        dashboard_port: int = 3000, 
+        auto_start_dashboard: bool = True
     ):
         """
         Initialize SkypyDB client.
@@ -90,7 +95,9 @@ class Client:
         self.db.delete_table_config(table_name)
 
     def create_table_from_config(
-        self, config: Dict[str, Any], table_name: Optional[str] = None
+        self,
+        config: Dict[str, Any],
+        table_name: Optional[str] = None
     ) -> Union["Table", Dict[str, "Table"]]:
         """
         Create table(s) from configuration.
@@ -210,8 +217,6 @@ class Client:
             return  # Dashboard already running
 
         def run_dashboard():
-            import os
-
             # Set environment variables before importing app
             os.environ["SKYPYDB_PATH"] = self.path
             os.environ["SKYPYDB_PORT"] = str(self.dashboard_port)
@@ -234,17 +239,38 @@ class Client:
         self._dashboard_thread.start()
 
         # Give the dashboard a moment to start
-        import time
-
         time.sleep(0.5)
 
-    def stop_dashboard(self) -> None:
+    def wait(self) -> None:
         """
-        Stop the dashboard.
+        Keep the program running so the dashboard stays active.
+        
+        This method blocks the main thread, keeping the dashboard alive.
+        
+        Press Ctrl+C to stop.
+        
+        Example:
+            client = skypydb.Client(path="./data/skypy.db")
+            table = client.create_table("my-table")
+            table.add(data=["example"], id=["auto"])
+            
+            # Keep dashboard running
+            client.wait()
         """
-
-        # Dashboard runs as daemon thread, will stop when main process exits
-        pass
+        
+        if self._dashboard_thread and self._dashboard_thread.is_alive():
+            # show dashboard URL
+            print(f"Dashboard is running at http://127.0.0.1:{self.dashboard_port}")
+            
+            print("Press Ctrl+C to stop...")
+            try:
+                while True:
+                    time.sleep(1)
+            except KeyboardInterrupt:
+                print("\nStopping...")
+                self.close()
+        else:
+            print("Dashboard is not running. Start it with client.start_dashboard()")
 
     def close(self) -> None:
         """

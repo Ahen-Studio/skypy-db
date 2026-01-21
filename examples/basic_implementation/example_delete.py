@@ -13,13 +13,9 @@ except Exception:
 # Retrieve the table before adding any data.
 table = client.get_table("all-my-documents")
 
-# Add data to the table.
-table.add(
+# delete data on the table assuming they are already in the table.
+table.delete(
     title=["document"],
     user_id=["user123"],
     content=["this is a document"],
-    id=["auto"]# ids are automatically created by the backend
 )
-
-# Keep the program running so the dashboard stays active
-client.wait()

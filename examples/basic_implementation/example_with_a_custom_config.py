@@ -26,15 +26,16 @@ config = {
 }
 
 # Create tables. get_table_from_config(config, table_name="all-my-documents"), delete_table_from_config(config, table_name="all-my-documents") are also available.
-table = client.create_table_from_config(config)# Create all the tables present in the config.
-#table = client.get_table_from_config(config, table_name="all-my-documents")
-#table = client.delete_table_from_config(config, table_name="all-my-documents")
-
-# Add data to a table.
+try:
+    table = client.create_table_from_config(config)# Create all the tables present in the config.
+except Exception:
+    # Tables already exist, that's fine
+    pass
 
 # Retrieve the table before adding any data.
 table = client.get_table_from_config(config, table_name="all-my-documents")
 
+# Add data to a table.
 table.add(
     title=["document"],
     user_id=["user123"],
@@ -42,9 +43,5 @@ table.add(
     id=["auto"]# ids are automatically created by the backend.
 )
 
-# Search results. You can also search the data by the id of the document.
-results = table.search(
-    index="user123",
-    title=["document"]# Search the corresponding data by their title.
-    #id=["***"]
-)
+# Keep the program running so the dashboard stays active
+client.wait()
