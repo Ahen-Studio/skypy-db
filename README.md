@@ -87,15 +87,16 @@ config = {
 }
 
 # Create tables. get_table_from_config(config, table_name="all-my-documents"), delete_table_from_config(config, table_name="all-my-documents") are also available.
-table = client.create_table_from_config(config)# Create all the tables present in the config.
-#table = client.get_table_from_config(config, table_name="all-my-documents")
-#table = client.delete_table_from_config(config, table_name="all-my-documents")
-
-# Add data to a table.
+try:
+    table = client.create_table_from_config(config)# Create all the tables present in the config.
+except Exception:
+    # Tables already exist, that's fine
+    pass
 
 # Retrieve the table before adding any data.
 table = client.get_table_from_config(config, table_name="all-my-documents")
 
+# Add data to a table.
 table.add(
     title=["document"],
     user_id=["user123"],
@@ -120,9 +121,14 @@ import skypydb
 client = skypydb.Client(path="./data/skypy.db")
 
 # Create table. get_table, delete_table are also available.
-table = client.create_table("all-my-documents")
-#table = client.get_table("all-my-documents")
-#table = client.delete_table("all-my-documents")
+try:
+    table = client.create_table("all-my-documents")
+except Exception:
+    # Tables already exist, that's fine
+    pass
+
+# Retrieve the table before adding any data.
+table = client.get_table("all-my-documents")
 
 # Add data to the table.
 table.add(

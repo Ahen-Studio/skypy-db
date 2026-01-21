@@ -262,6 +262,61 @@ class Database:
 
         return results
 
+    def delete_data(self, table_name: str, **filters) -> int:
+        """
+        Delete data from a table based on filters.
+
+        Args:
+            table_name: Name of the table
+            **filters: Filters as keyword arguments (column name = value)
+
+        Returns:
+            Number of rows deleted
+
+        Example:
+            db.delete_data(
+                table_name="my_table",
+                id="123"
+            )
+            db.delete_data(
+                table_name="my_table",
+                user_id="user123",
+                title="document"
+            )
+        """
+
+        if not self.table_exists(table_name):
+            raise TableNotFoundError(f"Table '{table_name}' not found")
+
+        if not filters:
+            # Safety check - don't allow deleting all rows without explicit filters
+            raise ValueError("Cannot delete without filters. Use filters to specify which rows to delete.")
+
+        conditions = []
+        params = []
+
+        # Build WHERE clause from filters
+        for column, value in filters.items():
+            # Handle list values - use IN clause
+            if isinstance(value, list) and len(value) > 0:
+                placeholders = ", ".join(["?" for _ in value])
+                conditions.append(f"[{column}] IN ({placeholders})")
+                params.extend([str(v) for v in value])
+            else:
+                conditions.append(f"[{column}] = ?")
+                params.append(str(value))
+
+        # Build DELETE query
+        where_clause = " AND ".join(conditions)
+        query = f"DELETE FROM [{table_name}] WHERE {where_clause}"
+
+        cursor = self.conn.cursor()
+
+        cursor.execute(query, params)
+        self.conn.commit()
+
+        return cursor.rowcount
+
     def _ensure_config_table(self) -> None:
         """
         Create the system table for storing table configurations if it doesn't exist.
