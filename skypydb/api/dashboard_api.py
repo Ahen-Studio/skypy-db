@@ -45,7 +45,10 @@ def get_table_data(table_name: str) -> List[Dict]:
 
 def get_table_schema(table_name: str) -> List[str]:
     """
-    Get column names for a table.
+    Retrieve the column names for the specified table.
+    
+    Returns:
+        columns (List[str]): Column names for the specified table.
     """
 
     db = get_database()
