@@ -10,6 +10,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from ..errors import TableAlreadyExistsError, TableNotFoundError
+from ..security.encryption import EncryptionManager
+from ..security.validation import InputValidator, ValidationError
 
 
 class Database:
@@ -20,18 +22,30 @@ class Database:
     def __init__(
         self,
         path: str,
+        encryption_key: Optional[str] = None,
+        encrypted_fields: Optional[List[str]] = None,
     ):
         """
         Initialize database connection.
 
         Args:
             path: Path to SQLite database file
+            encryption_key: Optional encryption key for data encryption.
+                           If provided, data will be encrypted at rest.
+            encrypted_fields: Optional list of field names to encrypt.
+                             If None and encryption is enabled, all fields except
+                             'id' and 'created_at' will be encrypted.
         """
 
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.conn = sqlite3.connect(str(self.path), check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
+        
+        # Initialize encryption manager
+        self.encryption = EncryptionManager(encryption_key=encryption_key)
+        self.encrypted_fields = encrypted_fields
+        
         self._ensure_config_table()
 
     def create_table(
@@ -46,7 +60,11 @@ class Database:
 
         Raises:
             TableAlreadyExistsError: If table already exists
+            ValidationError: If table name is invalid
         """
+        
+        # Validate table name
+        table_name = InputValidator.validate_table_name(table_name)
 
         # Check if table exists
         cursor = self.conn.cursor()
@@ -76,6 +94,12 @@ class Database:
         """
         Check if a table exists.
         """
+        
+        # Validate table name
+        try:
+            table_name = InputValidator.validate_table_name(table_name)
+        except ValidationError:
+            return False
 
         cursor = self.conn.cursor()
 
@@ -97,7 +121,11 @@ class Database:
 
         Raises:
             TableNotFoundError: If table doesn't exist
+            ValidationError: If table name is invalid
         """
+        
+        # Validate table name
+        table_name = InputValidator.validate_table_name(table_name)
 
         if not self.table_exists(table_name):
             raise TableNotFoundError(f"Table '{table_name}' not found")
@@ -114,6 +142,9 @@ class Database:
         """
         Get list of column names for a table.
         """
+        
+        # Validate table name
+        table_name = InputValidator.validate_table_name(table_name)
 
         if not self.table_exists(table_name):
             raise TableNotFoundError(f"Table '{table_name}' not found")
@@ -135,14 +166,19 @@ class Database:
             table_name: Name of the table
             columns: List of column names to add
         """
+        
+        # Validate table name
+        table_name = InputValidator.validate_table_name(table_name)
 
         existing_columns = set(self.get_table_columns(table_name))
         
         cursor = self.conn.cursor()
 
         for column in columns:
-            if column not in existing_columns and column not in ("id", "created_at"):
-                cursor.execute(f"ALTER TABLE [{table_name}] ADD COLUMN [{column}] TEXT")
+            # Validate column name
+            validated_column = InputValidator.validate_column_name(column)
+            if validated_column not in existing_columns and validated_column not in ("id", "created_at"):
+                cursor.execute(f"ALTER TABLE [{table_name}] ADD COLUMN [{validated_column}] TEXT")
 
         self.conn.commit()
 
@@ -162,7 +198,16 @@ class Database:
 
         Returns:
             The ID of the inserted row
+            
+        Raises:
+            ValidationError: If input data is invalid
         """
+        
+        # Validate table name
+        table_name = InputValidator.validate_table_name(table_name)
+        
+        # Validate data dictionary
+        data = InputValidator.validate_data_dict(data)
 
         if not self.table_exists(table_name):
             raise TableNotFoundError(f"Table '{table_name}' not found")
@@ -180,8 +225,11 @@ class Database:
         if columns_to_add:
             self.add_columns_if_needed(table_name, columns_to_add)
 
+        # Encrypt sensitive data before storing
+        encrypted_data = self._encrypt_data(data)
+
         # Build INSERT query
-        columns = list(data.keys())
+        columns = list(encrypted_data.keys())
         placeholders = ", ".join(["?" for _ in columns])
         column_names = ", ".join(columns)
 
@@ -189,7 +237,7 @@ class Database:
 
         cursor.execute(
             f"INSERT INTO [{table_name}] ({column_names}) VALUES ({placeholders})",
-            [str(data[col]) for col in columns],
+            [str(encrypted_data[col]) for col in columns],
         )
         self.conn.commit()
 
@@ -211,7 +259,21 @@ class Database:
 
         Returns:
             List of dictionaries containing matching rows
+            
+        Raises:
+            ValidationError: If input parameters are invalid
         """
+        
+        # Validate table name
+        table_name = InputValidator.validate_table_name(table_name)
+        
+        # Validate filters
+        if filters:
+            filters = InputValidator.validate_filter_dict(filters)
+        
+        # Sanitize index value
+        if index is not None:
+            index = InputValidator.sanitize_string(str(index))
 
         if not self.table_exists(table_name):
             raise TableNotFoundError(f"Table '{table_name}' not found")
@@ -255,10 +317,12 @@ class Database:
         
         cursor.execute(query, params)
 
-        # Convert rows to dictionaries
+        # Convert rows to dictionaries and decrypt sensitive data
         results = []
         for row in cursor.fetchall():
-            results.append(dict(row))
+            row_dict = dict(row)
+            decrypted_row = self._decrypt_data(row_dict)
+            results.append(decrypted_row)
 
         return results
 
@@ -281,6 +345,9 @@ class Database:
         """
         Get all data from a table.
         """
+        
+        # Validate table name
+        table_name = InputValidator.validate_table_name(table_name)
 
         if not self.table_exists(table_name):
             raise TableNotFoundError(f"Table '{table_name}' not found")
@@ -291,7 +358,9 @@ class Database:
 
         results = []
         for row in cursor.fetchall():
-            results.append(dict(row))
+            row_dict = dict(row)
+            decrypted_row = self._decrypt_data(row_dict)
+            results.append(decrypted_row)
 
         return results
 
@@ -320,7 +389,17 @@ class Database:
                 user_id="user123",
                 title="document"
             )
+            
+        Raises:
+            ValidationError: If input parameters are invalid
         """
+        
+        # Validate table name
+        table_name = InputValidator.validate_table_name(table_name)
+        
+        # Validate filters
+        if filters:
+            filters = InputValidator.validate_filter_dict(filters)
 
         if not self.table_exists(table_name):
             raise TableNotFoundError(f"Table '{table_name}' not found")
@@ -386,6 +465,9 @@ class Database:
             table_name: Name of the table
             config: Configuration dictionary for the table
         """
+        
+        # Validate table name
+        table_name = InputValidator.validate_table_name(table_name)
 
         # Normalize config to ensure types are strings for JSON serialization
         normalized_config = self._normalize_config(config)
@@ -445,6 +527,9 @@ class Database:
         Returns:
             Configuration dictionary or None if not found
         """
+        
+        # Validate table name
+        table_name = InputValidator.validate_table_name(table_name)
 
         cursor = self.conn.cursor()
 
@@ -471,6 +556,7 @@ class Database:
 
         Raises:
             TableAlreadyExistsError: If table already exists
+            ValidationError: If configuration is invalid
 
         Example:
             config = {
@@ -480,6 +566,13 @@ class Database:
                 "id": "auto"
             }
         """
+        
+        # Validate table name
+        table_name = InputValidator.validate_table_name(table_name)
+        
+        # Validate config structure
+        for col_name in config.keys():
+            InputValidator.validate_column_name(col_name)
 
         if self.table_exists(table_name):
             raise TableAlreadyExistsError(f"Table '{table_name}' already exists")
@@ -584,12 +677,80 @@ class Database:
 
         Args:
             table_name: Name of the table
+            
+        Raises:
+            ValidationError: If input parameters are invalid
         """
+        
+        # Validate table name
+        table_name = InputValidator.validate_table_name(table_name)
 
         cursor = self.conn.cursor()
 
         cursor.execute("DELETE FROM _skypy_config WHERE table_name = ?", (table_name,))
         self.conn.commit()
+
+    def _encrypt_data(
+        self,
+        data: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """
+        Encrypt sensitive fields in data dictionary.
+
+        Args:
+            data: Dictionary containing data to encrypt
+
+        Returns:
+            Dictionary with encrypted fields
+        """
+        if not self.encryption.enabled:
+            return data
+
+        # Determine which fields to encrypt
+        fields_to_encrypt = []
+        
+        if self.encrypted_fields is not None:
+            # Use explicitly specified fields
+            fields_to_encrypt = self.encrypted_fields
+        else:
+            # Encrypt all fields except id and created_at
+            fields_to_encrypt = [
+                key for key in data.keys() 
+                if key not in ("id", "created_at")
+            ]
+
+        return self.encryption.encrypt_dict(data, fields_to_encrypt)
+
+    def _decrypt_data(
+        self,
+        data: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """
+        Decrypt sensitive fields in data dictionary.
+
+        Args:
+            data: Dictionary containing encrypted data
+
+        Returns:
+            Dictionary with decrypted fields
+        """
+        if not self.encryption.enabled:
+            return data
+
+        # Determine which fields to decrypt
+        fields_to_decrypt = []
+        
+        if self.encrypted_fields is not None:
+            # Use explicitly specified fields
+            fields_to_decrypt = self.encrypted_fields
+        else:
+            # Decrypt all fields except id and created_at
+            fields_to_decrypt = [
+                key for key in data.keys() 
+                if key not in ("id", "created_at")
+            ]
+
+        return self.encryption.decrypt_dict(data, fields_to_decrypt)
 
     def close(
         self,

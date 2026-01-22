@@ -1,2 +1,4 @@
 reflex>=0.8.25
 uvicorn>=0.23.0
+cryptography>=41.0.0
+dotenv>=0.21.1

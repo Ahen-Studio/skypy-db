@@ -22,6 +22,8 @@ class Client:
         path: str,
         dashboard_port: int = 3000,
         auto_start_dashboard: bool = True,
+        encryption_key: Optional[str] = None,
+        encrypted_fields: Optional[list] = None,
     ):
         """
         Initialize SkypyDB client.
@@ -30,11 +32,36 @@ class Client:
             path: Path to SQLite database file
             dashboard_port: Port for the dashboard (default: 3000)
             auto_start_dashboard: Whether to automatically start dashboard (non-blocking)
+            encryption_key: Optional encryption key for data encryption at rest.
+                           If provided, sensitive data will be encrypted.
+                           Generate a secure key with: EncryptionManager.generate_key()
+            encrypted_fields: Optional list of field names to encrypt.
+                             If None and encryption is enabled, all fields except
+                             'id' and 'created_at' will be encrypted.
+                             
+        Example:
+            # Without encryption
+            client = skypydb.Client(path="./data/skypy.db")
+            
+            # With encryption (all fields encrypted by default)
+            from skypydb.security import EncryptionManager
+            key = EncryptionManager.generate_key()
+            client = skypydb.Client(
+                path="./data/skypy.db",
+                encryption_key=key
+            )
+            
+            # With encryption (specific fields only)
+            client = skypydb.Client(
+                path="./data/skypy.db",
+                encryption_key=key,
+                encrypted_fields=["content", "email", "password"]
+            )
         """
 
         self.path = path
         self.dashboard_port = dashboard_port
-        self.db = Database(path)
+        self.db = Database(path, encryption_key=encryption_key, encrypted_fields=encrypted_fields)
         self._dashboard_thread: Optional[threading.Thread] = None
         self._dashboard_server = None
 

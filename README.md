@@ -32,9 +32,11 @@ pip install skypydb # python client
 
 - Simple: fully-documented
 
-- Table: create, delete data from a table
+- Table: create, delete, search data from tables
 
-- Cli: command line interface for managing the database
+- Security, Input Validation: AES-256-GCM encryption for data at rest with selective field encryption, automatic protection against SQL injection attacks
+
+- CLI: command line interface for managing the database
 
 - Observable: Dashboard with real-time data, metrics, and query inspection
 
@@ -43,14 +45,68 @@ pip install skypydb # python client
 ## TODO
 
 - [x] code the database backend
+- [x] improve user data security
 - [ ] Create the dashboard using Reflex
 - [ ] write the documentation
-- [ ] improve user data security
 - [ ] code a custom cli
 
 ## What's next!
 
 - give us ideas!
+
+## Secure Implementation
+
+- first create a encryption key and make it available in .env file don't show this key to anyone
+
+```python
+from skypydb.security import EncryptionManager
+
+# Generate a secure encryption key
+encryption_key = EncryptionManager.generate_key()
+print(encryption_key) # don't show this key to anyone
+```
+
+- Use the encryption key to encrypt sensitive data
+
+```python
+import os
+import skypydb
+from skypydb.errors import TableAlreadyExistsError
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Generate a secure encryption key
+encryption_key = os.getenv("ENCRYPTION_KEY") # create a encryption key and make it available in .env file don't show this key to anyone
+
+# Create encrypted database
+client = skypydb.Client(
+    path="./data/secure.db",
+    encryption_key=encryption_key,
+    encrypted_fields=["password", "ssn", "credit_card"]  # Optional: encrypt only sensitive fields
+)
+
+# All operations work the same - encryption is transparent!
+try:
+    table = client.create_table("users")# Create the table.
+except TableAlreadyExistsError:
+    # Tables already exist, that's fine
+    pass
+    
+table = client.get_table("users")
+
+# Automatically encrypted
+table.add(
+    username=["alice"],
+    email=["alice@example.com"],
+    ssn=["123-45-6789"]  # only this field is if encrypted_fields is not None encrypted
+)
+
+# Data is automatically decrypted when retrieved
+users = table.get_all()
+print(users[0]['ssn'])  # "123-45-6789" (decrypted)
+```
 
 ## API
 
