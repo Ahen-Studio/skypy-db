@@ -2,7 +2,7 @@
 
 ## Encryption key
 
-- If you are using encryption, keep your encryption key secure and do not share it with anyone.
+- If you are using encryption, keep your encryption key and salt key secure and do not share it with anyone.
 
 ## Supported Versions
 
