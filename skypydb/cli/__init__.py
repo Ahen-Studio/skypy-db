@@ -2,6 +2,6 @@
 CLI module for Skypydb.
 """
 
-from .cli import Cli
+from .cli import cli
 
-__all__ = ["Cli"]
+__all__ = ["cli"]

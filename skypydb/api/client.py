@@ -21,7 +21,7 @@ class Client:
         self,
         path: str,
         dashboard_port: int = 3000,
-        auto_start_dashboard: bool = True,
+        auto_start_dashboard: bool = False,
         encryption_key: Optional[str] = None,
         salt: Optional[bytes] = None,
         encrypted_fields: Optional[list] = None,
@@ -32,7 +32,7 @@ class Client:
         Args:
             path: Path to SQLite database file
             dashboard_port: Port for the dashboard (default: 3000)
-            auto_start_dashboard: Whether to automatically start dashboard (non-blocking)
+            auto_start_dashboard: Whether to automatically start dashboard (disabled by default; use CLI to run dashboard)
             encryption_key: Optional encryption key for data encryption at rest.
                            If provided, sensitive data will be encrypted.
                            Generate a secure key with: EncryptionManager.generate_key()
@@ -295,6 +295,11 @@ class Client:
             # Blocking start (keeps dashboard running)
             client.start_dashboard(block=True)  # or just client.start_dashboard()
         """
+
+        if os.environ.get("SKYPYDB_DASHBOARD_FROM_CLI") != "1":
+            raise RuntimeError(
+                "Dashboard can only be started via the CLI command: skypydb dev"
+            )
 
         if self._dashboard_thread and self._dashboard_thread.is_alive():
             # Dashboard already running
