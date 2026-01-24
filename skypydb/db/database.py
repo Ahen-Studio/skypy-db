@@ -41,6 +41,11 @@ class Database:
         self.path = path
         self.encryption_key = encryption_key
         self.salt = salt
+        if encryption_key and encrypted_fields is None:
+            raise ValueError(
+                "encrypted_fields must be explicitly set when encryption_key is provided; "
+                "use [] to disable encryption."
+            )
         self.encrypted_fields = encrypted_fields if encrypted_fields is not None else []
 
         # Initialize encryption manager
