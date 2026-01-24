@@ -185,7 +185,7 @@ success_table.delete(
 
 ### Secure Implementation
 
-- first create a encryption key and make it available in .env file don't show this key to anyone, you can use the cli to generate these keys
+- first create a encryption key and a salt key and make it available in .env file don't show this key to anyone, you can use the Cli to generate those keys
 
 ```python
 # you can generate a secure encryption key and salt using the cli
