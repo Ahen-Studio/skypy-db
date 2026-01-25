@@ -58,13 +58,13 @@ class Client:
                 encrypted_fields=["content", "email", "password"]
             )
         """
+        self.path = path
         
         # Ensure the directory exists
         db_dir = os.path.dirname(self.path)
         if db_dir and not os.path.exists(db_dir):
             os.makedirs(db_dir, exist_ok=True)
 
-        self.path = path
         self.db = Database(path, encryption_key=encryption_key, salt=salt, encrypted_fields=encrypted_fields)
 
 
