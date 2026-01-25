@@ -16,6 +16,7 @@ from .validation import (
     sanitize_input,
 )
 
+
 __all__ = [
     "create_encryption_manager",
     "EncryptionError",

@@ -8,17 +8,17 @@ import json
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-
 from ..errors import TableAlreadyExistsError, TableNotFoundError
 from ..security.encryption import EncryptionManager
 from ..security.validation import InputValidator, ValidationError
 from ..schema.schema import TableDefinition
 
 
+# main class for managing SQLite database connections and operations
 class Database:
     """
     Manages SQLite database connections and operations.
-    
+
     All tables must be created via the schema system using defineSchema/defineTable.
     """
 
@@ -38,6 +38,7 @@ class Database:
             salt: Optional salt for encryption key derivation
             encrypted_fields: Optional list of fields to encrypt
         """
+
         self.path = path
         self.encryption_key = encryption_key
         self.salt = salt
@@ -61,6 +62,8 @@ class Database:
         # Ensure config table exists
         self._ensure_config_table()
 
+
+    # check if a table exists
     def table_exists(
         self,
         table_name: str,
@@ -68,7 +71,7 @@ class Database:
         """
         Check if a table exists.
         """
-        
+
         # Validate table name
         try:
             table_name = InputValidator.validate_table_name(table_name)
@@ -83,6 +86,8 @@ class Database:
         )
         return cursor.fetchone() is not None
 
+
+    # delete a table
     def delete_table(
         self,
         table_name: str,
@@ -97,7 +102,7 @@ class Database:
             TableNotFoundError: If table doesn't exist
             ValidationError: If table name is invalid
         """
-        
+
         # Validate table name
         table_name = InputValidator.validate_table_name(table_name)
 
@@ -109,6 +114,8 @@ class Database:
         cursor.execute(f"DROP TABLE [{table_name}]")
         self.conn.commit()
 
+
+    # retrieve table columns
     def get_table_columns(
         self,
         table_name: str,
@@ -116,7 +123,7 @@ class Database:
         """
         Get list of column names for a table.
         """
-        
+
         # Validate table name
         table_name = InputValidator.validate_table_name(table_name)
 
@@ -128,6 +135,8 @@ class Database:
         cursor.execute(f"PRAGMA table_info([{table_name}])")
         return [row[1] for row in cursor.fetchall()]
 
+
+    # add columns to a table if they don't exist
     def add_columns_if_needed(
         self,
         table_name: str,
@@ -140,12 +149,12 @@ class Database:
             table_name: Name of the table
             columns: List of column names to add
         """
-        
+
         # Validate table name
         table_name = InputValidator.validate_table_name(table_name)
 
         existing_columns = set(self.get_table_columns(table_name))
-        
+
         cursor = self.conn.cursor()
 
         for column in columns:
@@ -156,6 +165,8 @@ class Database:
 
         self.conn.commit()
 
+
+    # insert data into a table
     def insert_data(
         self,
         table_name: str,
@@ -172,14 +183,14 @@ class Database:
 
         Returns:
             The ID of the inserted row
-            
+
         Raises:
             ValidationError: If input data is invalid
         """
-        
+
         # Validate table name
         table_name = InputValidator.validate_table_name(table_name)
-        
+
         # Validate data dictionary
         data = InputValidator.validate_data_dict(data)
 
@@ -217,6 +228,8 @@ class Database:
 
         return data["id"]
 
+
+    # search data in a table
     def search(
         self,
         table_name: str,
@@ -233,18 +246,18 @@ class Database:
 
         Returns:
             List of dictionaries containing matching rows
-            
+
         Raises:
             ValidationError: If input parameters are invalid
         """
-        
+
         # Validate table name
         table_name = InputValidator.validate_table_name(table_name)
-        
+
         # Validate filters
         if filters:
             filters = InputValidator.validate_filter_dict(filters)
-        
+
         # Sanitize index value
         if index is not None:
             index = InputValidator.sanitize_string(str(index))
@@ -288,7 +301,7 @@ class Database:
         query = f"SELECT * FROM [{table_name}] WHERE {where_clause}"
 
         cursor = self.conn.cursor()
-        
+
         cursor.execute(query, params)
 
         # Convert rows to dictionaries and decrypt sensitive data
@@ -300,6 +313,8 @@ class Database:
 
         return results
 
+
+    # retrieve all table names
     def get_all_tables(
         self,
     ) -> List[str]:
@@ -312,6 +327,8 @@ class Database:
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
         return [row[0] for row in cursor.fetchall()]
 
+
+    # retrieve all data from a table
     def get_all_data(
         self,
         table_name: str,
@@ -319,7 +336,7 @@ class Database:
         """
         Get all data from a table.
         """
-        
+
         # Validate table name
         table_name = InputValidator.validate_table_name(table_name)
 
@@ -338,6 +355,8 @@ class Database:
 
         return results
 
+
+    # delete data from a table
     def delete_data(
         self,
         table_name: str,
@@ -363,14 +382,14 @@ class Database:
                 user_id="user123",
                 title="document"
             )
-            
+ 
         Raises:
             ValidationError: If input parameters are invalid
         """
-        
+
         # Validate table name
         table_name = InputValidator.validate_table_name(table_name)
-        
+
         # Validate filters
         if filters:
             filters = InputValidator.validate_filter_dict(filters)
@@ -407,6 +426,8 @@ class Database:
 
         return cursor.rowcount
 
+
+    # store table configuration
     def _ensure_config_table(
         self,
     ) -> None:
@@ -427,6 +448,8 @@ class Database:
         )
         self.conn.commit()
 
+
+    # save table configuration
     def save_table_config(
         self,
         table_name: str,
@@ -439,7 +462,7 @@ class Database:
             table_name: Name of the table
             config: Configuration dictionary for the table
         """
-        
+
         # Validate table name
         table_name = InputValidator.validate_table_name(table_name)
 
@@ -457,6 +480,8 @@ class Database:
         )
         self.conn.commit()
 
+
+    # normalize config to ensure types are strings for json serialization
     def _normalize_config(
         self,
         config: Dict[str, Any],
@@ -488,6 +513,8 @@ class Database:
 
         return normalized
 
+
+    # retrieve table configuration
     def get_table_config(
         self,
         table_name: str,
@@ -501,7 +528,7 @@ class Database:
         Returns:
             Configuration dictionary or None if not found
         """
-        
+
         # Validate table name
         table_name = InputValidator.validate_table_name(table_name)
 
@@ -518,6 +545,7 @@ class Database:
 
 
 
+    # create table from schema
     def create_table_from_schema(
         self,
         table_name: str,
@@ -578,6 +606,8 @@ class Database:
         self.save_table_config(table_name, config)
         self.conn.commit()
 
+
+    # convert table definition to config dictionary for storage
     def _table_def_to_config(
         self,
         table_def: TableDefinition,
@@ -591,12 +621,13 @@ class Database:
         Returns:
             Configuration dictionary
         """
+        
         config = {}
 
         # Convert validators to type strings
         for col_name, validator in table_def.columns.items():
             validator_repr = repr(validator)
-            
+
             # Map validator repr to config type
             # Check for optional first before checking inner types
             if "v.optional(" in validator_repr:
@@ -631,6 +662,8 @@ class Database:
 
         return config
 
+
+    # validate data against table configuration
     def validate_data_with_config(
         self,
         table_name: str,
@@ -697,6 +730,8 @@ class Database:
 
         return validated_data
 
+
+    # delete table configuration
     def delete_table_config(
         self,
         table_name: str,
@@ -706,11 +741,11 @@ class Database:
 
         Args:
             table_name: Name of the table
-            
+
         Raises:
             ValidationError: If input parameters are invalid
         """
-        
+
         # Validate table name
         table_name = InputValidator.validate_table_name(table_name)
 
@@ -719,6 +754,8 @@ class Database:
         cursor.execute("DELETE FROM _skypy_config WHERE table_name = ?", (table_name,))
         self.conn.commit()
 
+
+    # encrypt data dictionary
     def _encrypt_data(
         self,
         data: Dict[str, Any],
@@ -732,7 +769,7 @@ class Database:
         Returns:
             Dictionary with encrypted fields
         """
-        
+
         if not self.encryption.enabled:
             return data
 
@@ -744,6 +781,8 @@ class Database:
 
         return self.encryption.encrypt_dict(data, fields_to_encrypt)
 
+
+    # decrypt data dictionary
     def _decrypt_data(
         self,
         data: Dict[str, Any],
@@ -757,7 +796,7 @@ class Database:
         Returns:
             Dictionary with decrypted fields
         """
-        
+
         if not self.encryption.enabled:
             return data
 
@@ -769,6 +808,8 @@ class Database:
 
         return self.encryption.decrypt_dict(data, fields_to_decrypt)
 
+
+    # close database connection
     def close(
         self,
     ) -> None:
