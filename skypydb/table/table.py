@@ -125,7 +125,6 @@ class Table:
             )
         """
 
-        # Convert list filters if needed
         return self.db.delete_data(self.table_name, **filters)
 
 
