@@ -144,27 +144,34 @@ class Table:
 
         Args:
             index: Value to search for in the index column (primary search key)
-            **filters: Additional filters as keyword arguments
+            **filters: Additional filters as keyword arguments (column name = value or list of values)
 
         Returns:
             List of dictionaries containing matching rows
 
         Example:
+            # Search by index and a single filter
             results = table.search(
                 index="user123",
                 title="document"
             )
+
+            # Search with multiple criteria
+            results = table.search(
+                index="user123",
+                status="active",
+                category="news",
+            )
+
+            # Search with list values (e.g. uses IN clause in underlying DB)
+            results = table.search(
+                index="user123",
+                title=["doc1", "doc2"]
+            )
         """
 
-        # Convert list filters to single values (take first element)
-        processed_filters = {}
-        for key, value in filters.items():
-            if isinstance(value, list) and len(value) > 0:
-                processed_filters[key] = value[0]
-            else:
-                processed_filters[key] = value
-
-        return self.db.search(self.table_name, index=index, **processed_filters)
+        # Pass filters directly; list values are handled explicitly by the database layer
+        return self.db.search(self.table_name, index=index, **filters)
 
 
     # get_all the data from the table
