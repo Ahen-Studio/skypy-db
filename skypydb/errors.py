@@ -20,6 +20,7 @@ class TableNotFoundError(SkypydbError):
     pass
 
 
+# table errors handling
 class TableAlreadyExistsError(SkypydbError):
     """
     Raised when trying to create a table that already exists.
@@ -28,6 +29,7 @@ class TableAlreadyExistsError(SkypydbError):
     pass
 
 
+# database errors handling
 class DatabaseError(SkypydbError):
     """
     Raised when a database operation fails.
@@ -36,6 +38,7 @@ class DatabaseError(SkypydbError):
     pass
 
 
+# search errors handling
 class InvalidSearchError(SkypydbError):
     """
     Raised when search parameters are invalid.
@@ -52,16 +55,20 @@ class SecurityError(SkypydbError):
 
     pass
 
+
+# validation errors handling
 class ValidationError(SkypydbError):
     """
     Raised when input validation fails.
     """
-    
+
     pass
 
+
+# encryption errors handling
 class EncryptionError(SkypydbError):
     """
     Raised when encryption/decryption operations fail.
     """
-    
+
     pass

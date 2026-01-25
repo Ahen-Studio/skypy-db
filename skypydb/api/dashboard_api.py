@@ -4,19 +4,20 @@ API endpoints for the dashboard.
 
 import os
 from typing import Dict, List
-
 from ..db.database import Database
 
 
+# retrieve database instance from environment
 def get_database() -> Database:
     """
     Get database instance from environment.
     """
 
-    path = os.environ.get('SKYPYDB_PATH', './data/skypy.db')
+    path = os.environ.get('SKYPYDB_PATH', './skypydb/skypy.db')
     return Database(path)
 
 
+# retrieve all tables
 def get_all_tables() -> List[str]:
     """
     Get all table names.
@@ -30,6 +31,7 @@ def get_all_tables() -> List[str]:
         db.close()
 
 
+# retrieve specific data from a table
 def get_table_data(
     table_name: str,
 ) -> List[Dict]:
@@ -45,12 +47,13 @@ def get_table_data(
         db.close()
 
 
+# retrieve a table with there columms names
 def get_table_schema(
     table_name: str,
 ) -> List[str]:
     """
     Retrieve the column names for the specified table.
-    
+
     Returns:
         columns (List[str]): Column names for the specified table.
     """

@@ -1,5 +1,5 @@
 """
-Skypydb - Open-source reactive database for Python.
+Skypydb - Open Source Reactive Database for Python.
 """
 
 from .api.client import Client
@@ -16,7 +16,9 @@ from .security import (
     create_encryption_manager,
 )
 
-__version__ = "0.1.6"
+
+__version__ = "0.1.7"
+
 
 __all__ = [
     "Client",
