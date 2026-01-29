@@ -46,7 +46,7 @@ pip install skypydb # python client
 
 - [ ] Create the dashboard using Reflex
 - [ ] update the documentation
-- [ ] refactor all the new code
+- [ ] refactor /api/collection.py /api/vector_client.py /db/vector_database.py
 
 ## What's next!
 
@@ -289,8 +289,8 @@ Learn more on our [Docs](https://ahen.mintlify.app/)
 
 ## All Thanks To Our Contributors:
 
-<a href="https://github.com/reflex-dev/reflex/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=reflex-dev/reflex" />
+<a href="https://github.com/Ahen-Studio/skypy-db/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=Ahen-Studio/skypy-db" />
 </a>
 
 ## License
