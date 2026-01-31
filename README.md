@@ -68,7 +68,7 @@ pip install skypydb # python client
 | **SKY302** | ValidationError             | Raised when input validation fails                                      |
 | **SKY303** | EncryptionError             | Raised when encryption/decryption operations fail                       |
 | **SKY401** | CollectionNotFoundError     | Raised when attempting to access a vector collection that doesn't exist |
-| **SKY402** | CollectionAlreadyExistsError| Raised when trying to create a collection that already exists           |
+| **SKY402** | CollectionAlreadyExistsError | Raised when trying to create a collection that already exists           |
 | **SKY403** | EmbeddingError              | Raised when embedding generation fails                                  |
 | **SKY404** | VectorSearchError           | Raised when vector similarity search fails                              |
 
