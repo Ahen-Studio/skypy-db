@@ -8,6 +8,7 @@ import math
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Callable
+from ..security.validation import InputValidator
 
 
 # calculate cosine similarity between two vectors
@@ -146,6 +147,9 @@ class VectorDatabase:
             ValueError: If collection already exists
         """
 
+        name = InputValidator.validate_table_name(name)
+
+
         if self.collection_exists(name):
             raise ValueError(f"Collection '{name}' already exists")
 
@@ -240,6 +244,9 @@ class VectorDatabase:
         Raises:
             ValueError: If collection doesn't exist
         """
+
+        name = InputValidator.validate_table_name(name)
+
 
         if not self.collection_exists(name):
             raise ValueError(f"Collection '{name}' not found")
