@@ -66,10 +66,10 @@ class VectorClient:
 
         Example:
             # Basic usage with defaults
-            client = Vector_Client()
+            client = skypydb.VectorClient()
 
             # With custom embedding model
-            client = Vector_Client(embedding_model="mxbai-embed-large")
+            client = skypydb.VectorClient(embedding_model="mxbai-embed-large")
         """
 
         # Set default path
