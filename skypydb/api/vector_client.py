@@ -135,20 +135,26 @@ class VectorClient:
         """
 
         if get_or_create:
-            return self.get_or_create_collection(name, metadata)
+            # Ensure the collection exists, creating it if necessary.
+            # We intentionally discard the returned instance here so that
+            # this method can apply a consistent caching strategy via
+            # self._collections below.
+            self.get_or_create_collection(name, metadata)
+        else:
+            # Create collection in database
+            self._db.create_collection(name, metadata)
 
-        # Create collection in database
-        self._db.create_collection(name, metadata)
+        # Create and cache collection instance (or return cached one)
+        _collection = self._collections.get(name)
+        if _collection is None:
+            _collection = Collection(
+                db=self._db,
+                name=name,
+                metadata=metadata,
+            )
+            self._collections[name] = _collection
 
-        # Create and cache collection instance
-        collection = Collection(
-            db=self._db,
-            name=name,
-            metadata=metadata,
-        )
-        self._collections[name] = collection
-
-        return collection
+        return _collection
 
 
     # get a collection
@@ -310,9 +316,20 @@ class VectorClient:
             client.reset()
         """
 
-        for collection_info in self._db.list_collections():
-            self._db.delete_collection(collection_info["name"])
-        
+        # Prefer a single backend operation if available
+        reset_method = None
+
+        if hasattr(self._db, "reset"):
+            reset_method = getattr(self._db, "reset")
+        elif hasattr(self._db, "clear"):
+            reset_method = getattr(self._db, "clear")
+
+        if callable(reset_method):
+            reset_method()
+        else:
+            for collection_info in self._db.list_collections():
+                self._db.delete_collection(collection_info["name"])
+
         self._collections.clear()
         return True
 

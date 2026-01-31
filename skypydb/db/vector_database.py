@@ -150,7 +150,7 @@ class VectorDatabase:
         """
 
         name = InputValidator.validate_table_name(name)
-
+        table_name = f"vec_{name}"
 
         if self.collection_exists(name):
             raise ValueError(f"Collection '{name}' already exists")
@@ -159,7 +159,7 @@ class VectorDatabase:
 
         # Create the collection table
         cursor.execute(f"""
-            CREATE TABLE [vec_{name}] (
+            CREATE TABLE [{table_name}] (
                 id TEXT PRIMARY KEY,
                 document TEXT,
                 embedding TEXT NOT NULL,
@@ -260,7 +260,8 @@ class VectorDatabase:
         cursor = self.conn.cursor()
 
         # Drop the collection table
-        cursor.execute(f"DROP TABLE [vec_{name}]")
+        table_name = f"vec_{name}"
+        cursor.execute("DROP TABLE [" + table_name + "]")
 
         # Remove from collections metadata
         cursor.execute(

@@ -23,7 +23,12 @@ class SkypydbError(Exception):
         """
 
         self.message = message
-        super().__init__(self._format_message())
+
+        if self.message:
+            formatted_message = f"[{self.code}] {self.message}"
+        else:
+            formatted_message = f"[{self.code}] {self.__class__.__name__}"
+        super().__init__(formatted_message)
 
 
     # format the error message
@@ -42,7 +47,7 @@ class SkypydbError(Exception):
         return f"[{self.code}] {self.__class__.__name__}"
 
 
-# table errors handling
+# table not found error handling
 class TableNotFoundError(SkypydbError):
     """
     Raised when a table is not found.
@@ -51,7 +56,7 @@ class TableNotFoundError(SkypydbError):
     code = "SKY101"
 
 
-# table errors handling
+# table already exists error handling
 class TableAlreadyExistsError(SkypydbError):
     """
     Raised when trying to create a table that already exists.
@@ -105,7 +110,7 @@ class EncryptionError(SkypydbError):
     code = "SKY303"
 
 
-# collection errors handling
+# collection not found error handling
 class CollectionNotFoundError(SkypydbError):
     """
     Raised when a vector collection is not found.
@@ -114,7 +119,7 @@ class CollectionNotFoundError(SkypydbError):
     code = "SKY401"
 
 
-# collection errors handling
+# collection already exists error handling
 class CollectionAlreadyExistsError(SkypydbError):
     """
     Raised when trying to create a collection that already exists.

@@ -304,6 +304,13 @@ class Collection:
             collection.delete(where_document={"$contains": "deprecated"})
         """
 
+        # Require at least one selector to avoid accidental deletion of all items.
+        if ids is None and where is None and where_document is None:
+            raise ValueError(
+                "delete() requires at least one of 'ids', 'where', or "
+                "'where_document' to be provided."
+            )
+
         self._db.delete(
             collection_name=self._name,
             ids=ids,
