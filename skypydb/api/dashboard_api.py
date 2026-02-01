@@ -353,6 +353,8 @@ class VectorAPI:
                 "exists": False,
                 "error": str(error)
             }
+        finally:
+            vdb.close()
 
 
     # get documents from a vector collection
