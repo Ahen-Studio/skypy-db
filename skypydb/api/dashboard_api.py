@@ -548,7 +548,6 @@ class StatisticsAPI:
         """
 
         try:
-        try:
             vdb = DatabaseConnection.get_vector()
             collections = vdb.list_collections()
 
