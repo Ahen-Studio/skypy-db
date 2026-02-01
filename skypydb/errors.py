@@ -77,7 +77,10 @@ class InvalidSearchError(SkypydbError):
     """
 
     CODE = "SKY201"
-    default_message = "Invalid search parameters."
+    default_message = (
+        "One or more search parameters are invalid. "
+        "Check parameter names, types, and value ranges for your search query."
+    )
 
 
 # security errors handling
