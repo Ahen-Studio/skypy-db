@@ -9,7 +9,7 @@ class SkypydbError(Exception):
     """
 
     CODE = "SKY001"
-    default_message = "An error occurred."
+    default_message = "An unexpected error occurred in Skypydb."
 
     # initialize the SkypydbError instance for handling and formatting error messages
     def __init__(
