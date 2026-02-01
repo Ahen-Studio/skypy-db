@@ -33,7 +33,7 @@ class SkypydbError(Exception):
             default_msg = getattr(
                 self,
                 "default_message",
-                self.__class__.__name__,
+                "An unexpected error occurred.",
             )
             formatted_message = f"[{self.CODE}] {default_msg}"
 
