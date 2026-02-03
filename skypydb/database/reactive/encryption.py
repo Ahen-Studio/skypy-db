@@ -15,13 +15,12 @@ class Encryption:
         path: str,
         encryption_key: Optional[str] = None,
         salt: Optional[bytes] = None,
-        encrypted_fields: Optional[list] = None,
+        encrypted_fields: Optional[list] = None
     ):
         """
-        Initialize SQLite database.
+        Initialize the encryption module.
 
         Args:
-            path: Path to SQLite database file
             encryption_key: Optional encryption key for data encryption
             salt: Optional salt for encryption key derivation
             encrypted_fields: Optional list of fields to encrypt
@@ -36,12 +35,12 @@ class Encryption:
             )
         self.encrypted_fields = encrypted_fields if encrypted_fields is not None else []
 
-        # Initialize encryption manager
+        # initialize encryption manager
         self.encryption = EncryptionManager(encryption_key=encryption_key, salt=salt)
 
     def encrypt_data(
         self,
-        data: Dict[str, Any],
+        data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         Encrypt sensitive fields in data dictionary.
@@ -56,7 +55,7 @@ class Encryption:
         if not self.encryption.enabled:
             return data
 
-        # Determine which fields to encrypt
+        # determine which fields to encrypt
         fields_to_encrypt = [
             key for key in data.keys() 
             if key in self.encrypted_fields
@@ -66,7 +65,7 @@ class Encryption:
 
     def decrypt_data(
         self,
-        data: Dict[str, Any],
+        data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         Decrypt sensitive fields in data dictionary.
@@ -81,7 +80,7 @@ class Encryption:
         if not self.encryption.enabled:
             return data
 
-        # Determine which fields to decrypt
+        # determine which fields to decrypt
         fields_to_decrypt = [
             key for key in data.keys() 
             if key in self.encrypted_fields

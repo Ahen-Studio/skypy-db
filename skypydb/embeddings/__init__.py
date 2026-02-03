@@ -1,14 +1,17 @@
 """
-Embeddings module for vector operations.
+Embeddings module.
 """
 
-from .ollama import (
-    OllamaEmbedding,
-    get_embedding_function,
+from .ollama import OllamaEmbedding
+from .mixins import (
+    EmbeddingsFn,
+    SysGet,
+    Utils
 )
-
 
 __all__ = [
     "OllamaEmbedding",
-    "get_embedding_function"
+    "EmbeddingsFn",
+    "SysGet",
+    "Utils"
 ]

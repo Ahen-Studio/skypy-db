@@ -18,16 +18,26 @@ from skypydb.database.reactive import (
     Encryption,
     RSysAdd,
     RSysSearch,
-    RSysDelete,
+    RSysDelete
 )
 
-class ReactiveDatabase(SysCreate, SysDelete, SysGet, AuditTable, Utils, Encryption, RSysAdd, RSysSearch, RSysDelete):
+class ReactiveDatabase(
+    AuditTable,
+    Utils,
+    SysCreate,
+    SysDelete,
+    SysGet,
+    RSysAdd,
+    RSysSearch,
+    RSysDelete,
+    Encryption
+):
     def __init__(
         self,
         path: str,
         encryption_key: Optional[str] = None,
         salt: Optional[bytes] = None,
-        encrypted_fields: Optional[List[str]] = None,
+        encrypted_fields: Optional[List[str]] = None
     ):
         """
         Initialize reactive database with a single shared SQLite connection.
@@ -40,12 +50,35 @@ class ReactiveDatabase(SysCreate, SysDelete, SysGet, AuditTable, Utils, Encrypti
         """
 
         self.path = path
-        # Create directory if needed
+
+        # create directory if needed
         Path(path).parent.mkdir(parents=True, exist_ok=True)
-        # Create single shared connection (used by all mixins)
+
+        # create sqlite connection
         self.conn = sqlite3.connect(path, check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
-        # Setup encryption
+
+        # initialize encryption
+        self._init_encryption(path, encryption_key, salt, encrypted_fields)
+
+        # initialize all components
+        self._init_components()
+
+        # ensure system tables exist
+        self.check_config_table()
+
+    def _init_encryption(
+        self,
+        path,
+        encryption_key,
+        salt,
+        encrypted_fields
+    ):
+        """
+        Initialize encryption components.
+        """
+
+        # setup encryption attributes
         self.encryption_key = encryption_key
         self.salt = salt
         if encryption_key and encrypted_fields is None:
@@ -54,13 +87,34 @@ class ReactiveDatabase(SysCreate, SysDelete, SysGet, AuditTable, Utils, Encrypti
                 "use [] to disable encryption."
             )
         self.encrypted_fields = encrypted_fields if encrypted_fields is not None else []
-        self.encryption = EncryptionManager(encryption_key=encryption_key, salt=salt)
-        # Ensure system tables exist
-        self.check_config_table()
+        self._encryption_manager = EncryptionManager(encryption_key=encryption_key, salt=salt)
+        
+        # initialize Encryption parent class for encrypt_data/decrypt_data methods
+        Encryption.__init__(
+            self,
+            path=path,
+            encryption_key=encryption_key,
+            salt=salt,
+            encrypted_fields=encrypted_fields
+        )
 
-    def close(
-        self,
-    ) -> None:
+    def _init_components(self):
+        """
+        Initialize all database components with the shared connection.
+        """
+
+        # initialize all parent classes with the shared connection
+        # we pass conn=self.conn so all classes share the same connection
+        AuditTable.__init__(self, conn=self.conn)
+        Utils.__init__(self, conn=self.conn)
+        SysCreate.__init__(self, conn=self.conn)
+        SysDelete.__init__(self, conn=self.conn)
+        SysGet.__init__(self, conn=self.conn, encryption=self)
+        RSysAdd.__init__(self, conn=self.conn, encryption=self)
+        RSysSearch.__init__(self, conn=self.conn, encryption=self)
+        RSysDelete.__init__(self, conn=self.conn)
+
+    def close(self) -> None:
         """
         Close database connection.
         """

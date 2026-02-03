@@ -3,6 +3,7 @@ Module containing the SysCreate class, which is used to create tables in the dat
 """
 
 import sqlite3
+from typing import Optional
 from skypydb.errors import TableAlreadyExistsError
 from skypydb.security.validation import InputValidator
 from skypydb.schema.schema import TableDefinition
@@ -12,17 +13,24 @@ from skypydb.database.reactive.utils import Utils
 class SysCreate:
     def __init__(
         self,
-        path: str,
+        path: Optional[str] = None,
+        conn: Optional[sqlite3.Connection] = None
     ):
-        self.conn = sqlite3.connect(path, check_same_thread=False)
-        self.conn.row_factory = sqlite3.Row
-        self.audit = AuditTable(path)
-        self.utils = Utils(path)
+        if conn is not None:
+            self.conn = conn
+        elif path is not None:
+            self.conn = sqlite3.connect(path, check_same_thread=False)
+            self.conn.row_factory = sqlite3.Row
+        else:
+            raise ValueError("Either path or conn must be provided")
+
+        self.audit = AuditTable(conn=self.conn)
+        self.utils = Utils(conn=self.conn)
 
     def create_table(
         self,
         table_name: str,
-        table_def: TableDefinition,
+        table_def: TableDefinition
     ) -> None:
         """
         Create a table based on a TableDefinition from the schema system.
@@ -45,10 +53,10 @@ class SysCreate:
             database.create_table("users", table_def)
         """
 
-        # Validate table name
+        # validate table name
         table_name = InputValidator.validate_table_name(table_name)
 
-        # Validate column names
+        # validate column names
         for col_name in table_def.columns.keys():
             InputValidator.validate_column_name(col_name)
 
@@ -57,11 +65,11 @@ class SysCreate:
 
         cursor = self.conn.cursor()
 
-        # Get SQL column definitions from table definition
+        # get SQL column definitions from table definition
         sql_columns = table_def.get_sql_columns()
         columns_sql = ", ".join(sql_columns)
 
-        # Create table
+        # create table
         cursor.execute(
             f"""
             CREATE TABLE [{table_name}] (
@@ -70,11 +78,11 @@ class SysCreate:
             """
         )
 
-        # Create indexes
+        # create indexes
         for index_sql in table_def.get_sql_indexes():
             cursor.execute(index_sql)
 
-        # Save table definition as configuration
+        # save table definition as configuration
         config = self.utils.table_def_to_config(table_def)
         self.utils.save_table_config(table_name, config)
         self.conn.commit()

@@ -3,22 +3,32 @@ Module containing the SysDelete class, which is used to delete tables in the dat
 """
 
 import sqlite3
+from typing import Optional
 from skypydb.security.validation import InputValidator
 from skypydb.errors import TableNotFoundError
 from skypydb.database.reactive.tables.audit import AuditTable
+from skypydb.database.reactive.utils import Utils
 
 class SysDelete:
     def __init__(
         self,
-        path: str,
+        path: Optional[str] = None,
+        conn: Optional[sqlite3.Connection] = None
     ):
-        self.conn = sqlite3.connect(path, check_same_thread=False)
-        self.conn.row_factory = sqlite3.Row
-        self.audit = AuditTable(path)
+        if conn is not None:
+            self.conn = conn
+        elif path is not None:
+            self.conn = sqlite3.connect(path, check_same_thread=False)
+            self.conn.row_factory = sqlite3.Row
+        else:
+            raise ValueError("Either path or conn must be provided")
+
+        self.audit = AuditTable(conn=self.conn)
+        self.utils = Utils(conn=self.conn)
 
     def delete_table(
         self,
-        table_name: str,
+        table_name: str
     ) -> None:
         """
         Delete a table.
@@ -31,7 +41,7 @@ class SysDelete:
             ValidationError: If table name is invalid
         """
 
-        # Validate table name
+        # validate table name
         table_name = InputValidator.validate_table_name(table_name)
 
         if not self.audit.table_exists(table_name):
@@ -40,4 +50,7 @@ class SysDelete:
         cursor = self.conn.cursor()
 
         cursor.execute(f"DROP TABLE [{table_name}]")
+
+        self.utils.delete_table_config(table_name)
+
         self.conn.commit()

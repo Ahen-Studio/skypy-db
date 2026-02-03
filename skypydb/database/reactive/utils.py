@@ -16,14 +16,20 @@ from skypydb.schema.schema import TableDefinition
 class Utils:
     def __init__(
         self,
-        path: str,
+        path: Optional[str] = None,
+        conn: Optional[sqlite3.Connection] = None
     ):
-        self.conn = sqlite3.connect(path, check_same_thread=False)
-        self.conn.row_factory = sqlite3.Row
+        if conn is not None:
+            self.conn = conn
+        elif path is not None:
+            self.conn = sqlite3.connect(path, check_same_thread=False)
+            self.conn.row_factory = sqlite3.Row
+        else:
+            raise ValueError("Either path or conn must be provided")
 
     def get_table_config(
         self,
-        table_name: str,
+        table_name: str
     ) -> Optional[Dict[str, Any]]:
         """
         Retrieve a table's configuration from the system table.
@@ -35,7 +41,7 @@ class Utils:
             Configuration dictionary or None if not found
         """
 
-        # Validate table name
+        # validate table name
         table_name = InputValidator.validate_table_name(table_name)
 
         cursor = self.conn.cursor()
@@ -52,7 +58,7 @@ class Utils:
     def save_table_config(
         self,
         table_name: str,
-        config: Dict[str, Any],
+        config: Dict[str, Any]
     ) -> None:
         """
         Save a table's configuration to the system table.
@@ -62,10 +68,10 @@ class Utils:
             config: Configuration dictionary for the table
         """
 
-        # Validate table name
+        # validate table name
         table_name = InputValidator.validate_table_name(table_name)
 
-        # Normalize config to ensure types are strings for JSON serialization
+        # normalize config to ensure types are strings for JSON serialization
         normalized_config = self.normalize_config(config)
 
         cursor = self.conn.cursor()
@@ -82,19 +88,19 @@ class Utils:
 
     def normalize_config(
         self,
-        config: Dict[str, Any],
+        config: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         Normalize a table configuration so every column type is represented as a JSON-serializable value.
-        
+
         For each entry in `config`:
         - If the value is a dict, returns a copy with its `"type"` field converted to one of the strings `"str"`, `"int"`, `"float"`, or `"bool"` when the type exactly matches the corresponding Python type; otherwise the type is converted to its string form. Other keys in the dict are preserved.
         - If the value is a list, it is preserved unchanged.
         - For any other value, the value is replaced by the normalized type string as described above.
-        
+
         Parameters:
             config (Dict[str, Any]): Mapping of column names to type descriptors (type, dict, or list).
-        
+
         Returns:
             Dict[str, Any]: Normalized configuration with JSON-serializable type representations.
         """
@@ -102,13 +108,14 @@ class Utils:
         def _normalize_type(t: Any) -> str:
             """
             Map a Python type object to a canonical string name used in stored table configurations.
-            
+
             Parameters:
                 t (Any): A type object or value; exact matches to the builtin types `str`, `int`, `float`, and `bool` produce their canonical names.
-            
+
             Returns:
                 A string: `'str'` if `t` is `str`, `'int'` if `t` is `int`, `'float'` if `t` is `float`, `'bool'` if `t` is `bool`, otherwise `str(t)`.
             """
+
             if t is str:
                 return "str"
             if t is int:
@@ -135,7 +142,7 @@ class Utils:
 
     def table_def_to_config(
         self,
-        table_def: TableDefinition,
+        table_def: TableDefinition
     ) -> Dict[str, Any]:
         """
         Convert a TableDefinition to a config dictionary for storage.
@@ -146,17 +153,17 @@ class Utils:
         Returns:
             Configuration dictionary
         """
-        
+
         config = {}
 
-        # Convert validators to type strings
+        # convert validators to type strings
         for col_name, validator in table_def.columns.items():
             validator_repr = repr(validator)
 
-            # Map validator repr to config type
-            # Check for optional first before checking inner types
+            # map validator repr to config type
+            # check for optional first before checking inner types
             if "v.optional(" in validator_repr:
-                # Extract the base type from optional
+                # extract the base type from optional
                 if "v.string()" in validator_repr:
                     config[col_name] = {"type": "str", "optional": True}
                 elif "v.int64()" in validator_repr:
@@ -176,9 +183,9 @@ class Utils:
             elif "v.boolean()" in validator_repr:
                 config[col_name] = "bool"
             else:
-                config[col_name] = "str"  # Default
+                config[col_name] = "str"  # default
 
-        # Add index information
+        # add index information
         if table_def.indexes:
             config["_indexes"] = [
                 {"name": idx["name"], "fields": idx["fields"]}
@@ -189,7 +196,7 @@ class Utils:
 
     def delete_table_config(
         self,
-        table_name: str,
+        table_name: str
     ) -> None:
         """
         Delete a table's configuration from the system table.
@@ -201,7 +208,7 @@ class Utils:
             ValidationError: If input parameters are invalid
         """
 
-        # Validate table name
+        # validate table name
         table_name = InputValidator.validate_table_name(table_name)
 
         cursor = self.conn.cursor()
