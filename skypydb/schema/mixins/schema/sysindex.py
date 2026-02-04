@@ -7,9 +7,8 @@ from typing import (
     Dict,
     Any
 )
-from skypydb.schema import (
-    Validator,
-    TableDefinition
+from skypydb.schema.values import (
+    Validator
 )
 
 class SysIndex:
@@ -24,7 +23,7 @@ class SysIndex:
         self,
         name: str,
         fields: List[str]
-    ) -> "TableDefinition":
+    ) -> "SysIndex":
         """
         Add an index to the table definition.
 
@@ -36,14 +35,13 @@ class SysIndex:
             Self for method chaining
         """
 
-        # Validate that fields exist in columns
+        # validate that fields exist in columns
         for field in fields:
             if field not in self.columns:
                 raise ValueError(
                     f"Cannot create index '{name}' on non-existent field '{field}'. "
                     f"Available fields: {list(self.columns.keys())}"
                 )
-
         self.indexes.append({
             "name": name,
             "fields": fields
