@@ -6,7 +6,7 @@ from typing import (
     Dict,
     Any
 )
-from skypydb.schema import Validator
+from skypydb.schema.values import Validator
 
 class SysValidate:
     def __init__(

@@ -9,12 +9,9 @@ from typing import (
     List,
     Optional
 )
-from skypydb.security.validation import (
-    InputValidator,
-    ValidationError
-)
-from skypydb.errors import TableNotFoundError
-from skypydb.database.reactive.utils import Utils
+from skypydb.security.validation import InputValidator
+from skypydb.errors import TableNotFoundError, ValidationError
+from skypydb.database.mixins.reactive.utils import Utils
 
 class AuditTable:
     def __init__(

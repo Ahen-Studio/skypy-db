@@ -11,8 +11,8 @@ from typing import (
 )
 from skypydb.errors import TableNotFoundError
 from skypydb.security.validation import InputValidator
-from skypydb.database.reactive.tables.audit import AuditTable
-from skypydb.database.reactive.encryption import Encryption
+from skypydb.database.mixins.reactive.tables.audit import AuditTable
+from skypydb.database.mixins.reactive.encryption import Encryption
 
 class SysGet:
     def __init__(

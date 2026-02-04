@@ -9,7 +9,7 @@ from typing import (
     Optional
 )
 from skypydb.security.encryption import EncryptionManager
-from skypydb.database.reactive import (
+from skypydb.database.mixins.reactive import (
     SysCreate,
     SysDelete,
     SysGet,

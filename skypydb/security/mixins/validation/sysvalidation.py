@@ -9,24 +9,31 @@ from typing import (
     Any
 )
 from skypydb.security.validation import InputValidator
-from skypydb.security.mixins.validation import (
-    SysCheck,
-    SysSanitize
+from skypydb.security.constants import (
+    MAX_TABLE_NAME_LENGTH,
+    MAX_COLUMN_NAME_LENGTH,
+    MAX_STRING_LENGTH,
+    TABLE_NAME_PATTERN,
+    COLUMN_NAME_PATTERN
 )
+from skypydb.security.mixins.validation.syscheck import SysCheck
+from skypydb.security.mixins.validation.syssanitize import SysSanitize
 
 class SysValidation:
+    @classmethod
     def __init__(
-        self,
-        input_validator: InputValidator,
-        sys_check: SysCheck,
-        sys_sanitize: SysSanitize
+        cls,
+        input_validator: "InputValidator",
+        sys_check: "SysCheck",
+        sys_sanitize: "SysSanitize"
     ):
-        self.input_validator = input_validator
-        self.sys_check = sys_check
-        self.sys_sanitize = sys_sanitize
+        cls.input_validator = input_validator
+        cls.sys_check = sys_check
+        cls.sys_sanitize = sys_sanitize
 
+    @classmethod
     def validate_table_name(
-        self,
+        cls,
         table_name: str
     ) -> str:
         """
@@ -48,24 +55,25 @@ class SysValidation:
         if not isinstance(table_name, str):
             raise ValidationError("Table name must be a string")
 
-        if len(table_name) > self.input_validator.MAX_TABLE_NAME_LENGTH:
+        if len(table_name) > MAX_TABLE_NAME_LENGTH:
             raise ValidationError(
-                f"Table name too long (max {self.input_validator.MAX_TABLE_NAME_LENGTH} characters)"
+                f"Table name too long (max {MAX_TABLE_NAME_LENGTH} characters)"
             )
 
-        if not self.input_validator.TABLE_NAME_PATTERN.match(table_name):
+        if not TABLE_NAME_PATTERN.match(table_name):
             raise ValidationError(
                 "Table name must start with a letter or underscore and contain only "
                 "alphanumeric characters, underscores, and hyphens"
             )
 
         # check for SQL injection patterns
-        if self.sys_check._contains_sql_injection(table_name):
+        if cls.sys_check._contains_sql_injection(table_name):
             raise ValidationError("Table name contains potentially dangerous characters")
         return table_name
 
+    @classmethod
     def validate_column_name(
-        self,
+        cls,
         column_name: str,
     ) -> str:
         """
@@ -87,24 +95,25 @@ class SysValidation:
         if not isinstance(column_name, str):
             raise ValidationError("Column name must be a string")
 
-        if len(column_name) > self.input_validator.MAX_COLUMN_NAME_LENGTH:
+        if len(column_name) > MAX_COLUMN_NAME_LENGTH:
             raise ValidationError(
-                f"Column name too long (max {self.input_validator.MAX_COLUMN_NAME_LENGTH} characters)"
+                f"Column name too long (max {MAX_COLUMN_NAME_LENGTH} characters)"
             )
 
-        if not self.input_validator.COLUMN_NAME_PATTERN.match(column_name):
+        if not COLUMN_NAME_PATTERN.match(column_name):
             raise ValidationError(
                 "Column name must start with a letter or underscore and contain only "
                 "alphanumeric characters and underscores"
             )
 
         # check for SQL injection patterns
-        if self.sys_check._contains_sql_injection(column_name):
+        if cls.sys_check._contains_sql_injection(column_name):
             raise ValidationError("Column name contains potentially dangerous characters")
         return column_name
 
+    @classmethod
     def validate_string_value(
-        self,
+        cls,
         value: str,
         max_length: Optional[int] = None,
     ) -> str:
@@ -125,7 +134,7 @@ class SysValidation:
         if not isinstance(value, str):
             raise ValidationError("Value must be a string")
 
-        max_len = max_length or self.input_validator.MAX_STRING_LENGTH
+        max_len = max_length or MAX_STRING_LENGTH
 
         if len(value) > max_len:
             raise ValidationError(
@@ -133,8 +142,9 @@ class SysValidation:
             )
         return value
 
+    @classmethod
     def validate_data_dict(
-        self,
+        cls,
         data: Dict[str, Any],
     ) -> Dict[str, Any]:
         """
@@ -149,6 +159,7 @@ class SysValidation:
         Raises:
             ValidationError: If data is invalid
         """
+        from skypydb.security.mixins.validation.syssanitize import SysSanitize
 
         if not isinstance(data, dict):
             raise ValidationError("Data must be a dictionary")
@@ -157,24 +168,25 @@ class SysValidation:
 
         for key, value in data.items():
             # validate column name
-            validated_key = self.validate_column_name(key)
+            validated_key = SysValidation.validate_column_name(key)
 
             # validate value based on type
             if isinstance(value, str):
-                validated_value = self.sys_sanitize.sanitize_string(value)
+                validated_value = SysSanitize.sanitize_string(value)
             elif isinstance(value, (int, float, bool)):
                 validated_value = value
             elif value is None:
                 validated_value = None
             else:
                 # convert to string for other types
-                validated_value = self.sys_sanitize.sanitize_string(str(value))
+                validated_value = SysSanitize.sanitize_string(str(value))
 
             validated_data[validated_key] = validated_value
         return validated_data
 
+    @classmethod
     def validate_filter_dict(
-        self,
+        cls,
         filters: Dict[str, Any],
     ) -> Dict[str, Any]:
         """
@@ -197,29 +209,30 @@ class SysValidation:
 
         for key, value in filters.items():
             # validate column name
-            validated_key = self.validate_column_name(key)
+            validated_key = cls.validate_column_name(key)
 
             # validate value(s)
             if isinstance(value, list):
                 validated_value = [
-                    self.sys_sanitize.sanitize_string(str(v)) if not isinstance(v, (int, float, bool, type(None)))
+                    cls.sys_sanitize.sanitize_string(str(v)) if not isinstance(v, (int, float, bool, type(None)))
                     else v
                     for v in value
                 ]
             elif isinstance(value, str):
-                validated_value = self.sys_sanitize.sanitize_string(value)
+                validated_value = cls.sys_sanitize.sanitize_string(value)
             elif isinstance(value, (int, float, bool)):
                 validated_value = value
             elif value is None:
                 validated_value = None
             else:
-                validated_value = self.sys_sanitize.sanitize_string(str(value))
+                validated_value = cls.sys_sanitize.sanitize_string(str(value))
 
             validated_filters[validated_key] = validated_value
         return validated_filters
 
+    @classmethod
     def validate_config(
-        self,
+        cls,
         config: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
@@ -242,7 +255,7 @@ class SysValidation:
 
         for table_name, table_config in config.items():
             # validate table name
-            validated_table_name = self.validate_table_name(table_name)
+            validated_table_name = cls.validate_table_name(table_name)
 
             if not isinstance(table_config, dict):
                 raise ValidationError(
@@ -252,7 +265,7 @@ class SysValidation:
 
             for column_name, column_type in table_config.items():
                 # validate column name
-                validated_column_name = self.validate_column_name(column_name)
+                validated_column_name = cls.validate_column_name(column_name)
                 # validate column type
                 valid_types = [str, int, float, bool, "str", "int", "float", "bool", "auto"]
 

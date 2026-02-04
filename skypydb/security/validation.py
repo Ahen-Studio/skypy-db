@@ -2,12 +2,17 @@
 Input validation and sanitization module for Skypydb.
 """
 
-import re
-from skypydb.security.mixins.validation import (
-    SysCheck,
-    SysSanitize,
-    SysValidation
+from skypydb.security.constants import (
+    TABLE_NAME_PATTERN,
+    COLUMN_NAME_PATTERN,
+    MAX_TABLE_NAME_LENGTH,
+    MAX_COLUMN_NAME_LENGTH,
+    MAX_STRING_LENGTH,
+    SQL_INJECTION_PATTERNS
 )
+from skypydb.security.mixins.validation.syscheck import SysCheck
+from skypydb.security.mixins.validation.syssanitize import SysSanitize
+from skypydb.security.mixins.validation.sysvalidation import SysValidation
 
 class InputValidator(
     SysCheck,
@@ -19,28 +24,13 @@ class InputValidator(
     """
 
     # patterns for validation
-    TABLE_NAME_PATTERN = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_-]*$')
-    COLUMN_NAME_PATTERN = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
+    TABLE_NAME_PATTERN = TABLE_NAME_PATTERN
+    COLUMN_NAME_PATTERN = COLUMN_NAME_PATTERN
 
     # maximum lengths
-    MAX_TABLE_NAME_LENGTH = 64
-    MAX_COLUMN_NAME_LENGTH = 64
-    MAX_STRING_LENGTH = 10000
+    MAX_TABLE_NAME_LENGTH = MAX_TABLE_NAME_LENGTH
+    MAX_COLUMN_NAME_LENGTH = MAX_COLUMN_NAME_LENGTH
+    MAX_STRING_LENGTH = MAX_STRING_LENGTH
 
     # SQL injection patterns to detect
-    SQL_INJECTION_PATTERNS = [
-        r';\s*DROP\s+TABLE',
-        r';\s*DELETE\s+FROM',
-        r';\s*UPDATE\s+',
-        r';\s*INSERT\s+INTO',
-        r'--',
-        r'/\*',
-        r'\*/',
-        r'xp_',
-        r'sp_',
-        r'EXEC\s*\(',
-        r'EXECUTE\s*\(',
-        r'UNION\s+SELECT',
-        r'INTO\s+OUTFILE',
-        r'LOAD_FILE',
-    ]
+    SQL_INJECTION_PATTERNS = SQL_INJECTION_PATTERNS

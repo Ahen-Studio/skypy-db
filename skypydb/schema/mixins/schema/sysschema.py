@@ -7,7 +7,7 @@ from typing import (
     Dict,
     Optional
 )
-from skypydb.schema import TableDefinition
+from skypydb.schema.schema import TableDefinition
 
 class SysSchema:
     def __init__(

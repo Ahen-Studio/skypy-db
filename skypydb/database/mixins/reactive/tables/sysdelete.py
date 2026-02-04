@@ -6,8 +6,8 @@ import sqlite3
 from typing import Optional
 from skypydb.security.validation import InputValidator
 from skypydb.errors import TableNotFoundError
-from skypydb.database.reactive.tables.audit import AuditTable
-from skypydb.database.reactive.utils import Utils
+from skypydb.database.mixins.reactive.tables.audit import AuditTable
+from skypydb.database.mixins.reactive.utils import Utils
 
 class SysDelete:
     def __init__(

@@ -5,8 +5,8 @@ Module containing the SysSanitize class, which is used to sanitize data in the d
 from typing import Any
 
 class SysSanitize:
+    @staticmethod
     def sanitize_string(
-        self,
         value: str
     ) -> str:
         """

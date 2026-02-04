@@ -2,13 +2,11 @@
 Schema module for Skypydb.
 """
 
-from skypydb.schema import (
-    SysSchema,
-    TableDefinition
-)
+from skypydb.schema.schema import TableDefinition
 from skypydb.schema.mixins.schema import (
     defineSchema,
-    defineTable
+    defineTable,
+    SysSchema
 )
 from skypydb.schema.values import (
     Validator,

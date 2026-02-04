@@ -8,10 +8,8 @@ from typing import (
     Any,
     Optional
 )
-from skypydb.schema import (
-    TableDefinition,
-    Validator
-)
+from skypydb.schema.values import Validator
+from skypydb.schema.schema import TableDefinition
 from skypydb.schema.mixins.schema.sysschema import SysSchema
 
 class SysDef:
@@ -26,7 +24,7 @@ class SysDef:
 
 def defineTable(
     columns: Dict[str, Validator]
-) -> TableDefinition:
+) -> "TableDefinition":
     """
     Define a table with its columns and types.
 
@@ -51,8 +49,8 @@ def defineTable(
     return TableDefinition(columns)
 
 def defineSchema(
-    tables: Dict[str, TableDefinition]
-) -> SysSchema:
+    tables: Dict[str, "TableDefinition"]
+) -> "SysSchema":
     """
     Define a schema with multiple tables.
 

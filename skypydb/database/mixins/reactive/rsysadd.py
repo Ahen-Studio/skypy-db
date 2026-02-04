@@ -8,8 +8,8 @@ import uuid
 from datetime import datetime
 from skypydb.security.validation import InputValidator
 from skypydb.errors import TableNotFoundError
-from skypydb.database.reactive.tables.audit import AuditTable
-from skypydb.database.reactive.encryption import Encryption
+from skypydb.database.mixins.reactive.tables.audit import AuditTable
+from skypydb.database.mixins.reactive.encryption import Encryption
 
 class RSysAdd:
     def __init__(

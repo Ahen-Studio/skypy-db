@@ -7,8 +7,8 @@ from typing import Optional
 from skypydb.errors import TableAlreadyExistsError
 from skypydb.security.validation import InputValidator
 from skypydb.schema.schema import TableDefinition
-from skypydb.database.reactive.tables.audit import AuditTable
-from skypydb.database.reactive.utils import Utils
+from skypydb.database.mixins.reactive.tables.audit import AuditTable
+from skypydb.database.mixins.reactive.utils import Utils
 
 class SysCreate:
     def __init__(

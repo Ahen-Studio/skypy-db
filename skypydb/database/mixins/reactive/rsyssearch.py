@@ -10,13 +10,11 @@ from typing import (
     Optional
 )
 from skypydb.errors import TableNotFoundError
-from skypydb.security.validation import (
-    InputValidator,
-    ValidationError
-)
-from skypydb.database.reactive.tables.audit import AuditTable
-from skypydb.database.reactive.tables.sysget import SysGet
-from skypydb.database.reactive.encryption import Encryption
+from skypydb.security.validation import InputValidator
+from skypydb.errors import ValidationError
+from skypydb.database.mixins.reactive.tables.audit import AuditTable
+from skypydb.database.mixins.reactive.tables.sysget import SysGet
+from skypydb.database.mixins.reactive.encryption import Encryption
 
 class RSysSearch:
     def __init__(

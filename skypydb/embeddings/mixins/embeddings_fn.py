@@ -6,7 +6,7 @@ from typing import (
     List,
     Optional
 )
-from skypydb.embeddings.mixins import SysGet
+from skypydb.embeddings.mixins.sysget import SysGet
 
 class EmbeddingsFn:
     def embed(

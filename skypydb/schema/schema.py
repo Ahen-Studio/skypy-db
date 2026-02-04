@@ -9,13 +9,11 @@ from typing import (
     Optional
 )
 from .values import Validator
-from skypydb.schema.mixins.schema import (
-    SysIndex,
-    SysValidate,
-    SysDef,
-    SysGet,
-    SysSchema
-)
+from skypydb.schema.mixins.schema.sysdef import SysDef
+from skypydb.schema.mixins.schema.sysget import SysGet
+from skypydb.schema.mixins.schema.sysschema import SysSchema
+from skypydb.schema.mixins.schema.sysindex import SysIndex
+from skypydb.schema.mixins.schema.sysvalidate import SysValidate
 
 class TableDefinition(
     SysIndex,
