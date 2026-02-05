@@ -1,5 +1,5 @@
 """
-
+Module containing the SysCreate class, which is used to create a new vector collection.
 """
 
 import json

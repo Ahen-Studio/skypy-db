@@ -1,5 +1,5 @@
 """
-
+Module containing the SysCount class, which is used to count items in a collection.
 """
 
 from skypydb.security.validation import InputValidator

@@ -1,5 +1,5 @@
 """
-
+Module containing the SysEmbeddings class, which is used to set the embedding function for the vector datebase.
 """
 
 from typing import (

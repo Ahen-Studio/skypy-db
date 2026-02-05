@@ -1,5 +1,5 @@
 """
-
+Module containing the AuditCollections class, which is used to check the integrity of a collection.
 """
 
 from typing import (

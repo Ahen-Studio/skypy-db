@@ -1,5 +1,5 @@
 """
-
+Module containing the SysUpdate class, which is used to update items in the collection.
 """
 
 import json

@@ -1,5 +1,5 @@
 """
-
+Module containing the SysDelete class, which is used to delete a collection.
 """
 
 from skypydb.security.validation import InputValidator

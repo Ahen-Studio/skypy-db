@@ -1,5 +1,5 @@
 """
-
+Module containing the SysAdd class, which is used to get information about the collection.
 """
 
 import json

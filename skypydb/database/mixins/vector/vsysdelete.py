@@ -1,5 +1,5 @@
 """
-
+Module containing the VSysDelete class, which is used to delete items in the collection.
 """
 
 from typing import (

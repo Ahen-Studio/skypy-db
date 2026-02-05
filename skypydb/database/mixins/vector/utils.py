@@ -1,5 +1,5 @@
 """
-
+Module containing the base definition, which are used to calculate cosine and euclidean vectors.
 """
 
 import math

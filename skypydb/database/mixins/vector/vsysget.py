@@ -1,5 +1,5 @@
 """
-
+Module containing the VSysGet class, which is used to get items in the collection.
 """
 
 import json
