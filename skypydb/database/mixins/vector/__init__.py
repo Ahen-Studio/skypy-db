@@ -2,12 +2,33 @@
 Vector database operations module.
 """
 
-# Note: Vector submodule files are currently empty placeholders
-# This module is ready for future vector record operations:
-# - sysadd: Add items to vector collections
-# - sysdelete: Delete items from vector collections
-# - sysget: Get/retrieve items from vector collections
-# - sysquery: Query vector collections
-# - sysupdate: Update items in vector collections
+from skypydb.database.mixins.vector.utils import cosine_similarity, euclidean_distance
+from skypydb.database.mixins.vector.sysembeddings import SysEmbeddings
+from skypydb.database.mixins.vector.sysadd import SysAdd
+from skypydb.database.mixins.vector.sysupdate import SysUpdate
+from skypydb.database.mixins.vector.sysquery import SysQuery
+from skypydb.database.mixins.vector.vsysget import VSysGet
+from skypydb.database.mixins.vector.vsysdelete import VSysDelete
+from skypydb.database.mixins.vector.collections import (
+    AuditCollections,
+    SysCreate,
+    SysGet,
+    SysCount,
+    SysDelete
+)
 
-__all__ = []
+__all__ = [
+    cosine_similarity,
+    euclidean_distance,
+    SysEmbeddings,
+    SysAdd,
+    SysUpdate,
+    SysQuery,
+    VSysGet,
+    VSysDelete,
+    AuditCollections,
+    SysCreate,
+    SysGet,
+    SysCount,
+    SysDelete
+]

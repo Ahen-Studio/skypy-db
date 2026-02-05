@@ -2,12 +2,16 @@
 Vector collections module.
 """
 
-# Note: Collection submodule files are currently empty placeholders
-# This module is ready for future collection management operations:
-# - syscreate: Create vector collections
-# - sysdelete: Delete vector collections
-# - sysget: Get/retrieve collection metadata
-# - syscount: Count items in collections
-# - audit: Audit collection operations
+from skypydb.database.mixins.vector.collections.audit import AuditCollections
+from skypydb.database.mixins.vector.collections.syscreate import SysCreate
+from skypydb.database.mixins.vector.collections.sysget import SysGet
+from skypydb.database.mixins.vector.collections.syscount import SysCount
+from skypydb.database.mixins.vector.collections.sysdelete import SysDelete
 
-__all__ = []
+__all__ = [
+    AuditCollections,
+    SysCreate,
+    SysGet,
+    SysCount,
+    SysDelete
+]
