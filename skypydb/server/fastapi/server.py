@@ -4,15 +4,23 @@ Skypydb API Server
 
 import os
 import sys
-from typing import Dict, Any, Optional
-from fastapi import FastAPI, HTTPException, Header
+from typing import (
+    Dict,
+    Any,
+    Optional
+)
+from fastapi import (
+    FastAPI,
+    HTTPException,
+    Header
+)
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 # Add parent directory to path to import skypydb
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from skypydb.api.dashboard_api import DashboardAPI
+from skypydb.server.dashboard_server import DashboardAPI
 
 app = FastAPI(
     title="SkypyDB Dashboard API",
@@ -205,7 +213,6 @@ async def get_collection_documents(
         offset = body.get('offset', 0)
         document_ids = body.get('document_ids')
         metadata_filter = body.get('metadata_filter')
-
         return dashboard_api.vector.get_documents(
             collection_name,
             document_ids=document_ids,
