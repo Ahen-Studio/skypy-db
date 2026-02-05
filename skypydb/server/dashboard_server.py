@@ -4,13 +4,16 @@ Dashboard API for monitoring Skypydb databases.
 
 import os
 import time
-from typing import Dict, List, Optional, Any
+from typing import (
+    Dict,
+    List,
+    Optional,
+    Any
+)
 from dataclasses import dataclass
-from skypydb.database.database import Database
-from skypydb.database.vector_database import VectorDatabase
+from skypydb.database.reactive_db import ReactiveDatabase
+from skypydb.database.vector_db import VectorDatabase
 
-
-# data classes
 @dataclass
 class TableInfo:
     """
@@ -22,7 +25,6 @@ class TableInfo:
     columns: List[str]
     config: Optional[Dict] = None
 
-
 @dataclass
 class VectorCollectionInfo:
     """
@@ -32,7 +34,6 @@ class VectorCollectionInfo:
     name: str
     document_count: int
     metadata: Dict[str, Any]
-
 
 @dataclass
 class PaginatedResult:
@@ -46,21 +47,19 @@ class PaginatedResult:
     offset: int
     has_more: bool
 
-
-# database connection
 class DatabaseConnection:
     """
     Manages database connections.
     """
 
     @staticmethod
-    def get_main() -> Database:
+    def get_main() -> ReactiveDatabase:
         """
         Get main database instance from environment.
         """
 
         path = os.environ.get('SKYPYDB_PATH', './db/_generated/skypydb.db')
-        return Database(path)
+        return ReactiveDatabase(path)
 
     @staticmethod
     def get_vector() -> VectorDatabase:
@@ -71,14 +70,11 @@ class DatabaseConnection:
         path = os.environ.get('SKYPYDB_VECTOR_PATH', './db/_generated/vector.db')
         return VectorDatabase(path)
 
-
-# health monitoring
 class HealthAPI:
     """
     API for checking system health status.
     """
 
-    # check health status of all database components
     def check(self) -> Dict[str, Any]:
         """
         Check health status of all database components.
@@ -95,11 +91,8 @@ class HealthAPI:
 
         self._check_main(status)
         self._check_vector(status)
-
         return status
 
-
-    # check main database health
     def _check_main(self, status: Dict[str, Any]) -> None:
         """
         Check main database health.
@@ -121,8 +114,6 @@ class HealthAPI:
             }
             status["status"] = "degraded"
 
-
-    # check vector database health
     def _check_vector(self, status: Dict[str, Any]) -> None:
         """
         Check vector database health.
@@ -148,17 +139,14 @@ class HealthAPI:
                 try:
                     vdb.close()
                 except Exception:
-                    # Suppress close errors in health check to avoid masking original issues
+                    # suppress close errors in health check to avoid masking original issues
                     pass
 
-
-# table operations
 class TableAPI:
     """
     API for table operations.
     """
 
-    # list all tables in the database with metadata and row counts
     def list_all(self) -> List[Dict[str, Any]]:
         """
         Get all tables with metadata and row counts.
@@ -172,9 +160,7 @@ class TableAPI:
         finally:
             db.close()
 
-
-    # get information about a specific table
-    def _get_info(self, db: Database, table_name: str) -> Dict[str, Any]:
+    def _get_info(self, db: ReactiveDatabase, table_name: str) -> Dict[str, Any]:
         """
         Get information about a specific table.
         """
@@ -194,8 +180,6 @@ class TableAPI:
                 "config": None
             }
 
-
-    # get the schema information for a table
     def get_schema(self, table_name: str) -> Dict[str, Any]:
         """
         Get schema information for a table.
@@ -212,8 +196,6 @@ class TableAPI:
         finally:
             db.close()
 
-
-    # get a specific number of data from a table
     def get_data(
         self,
         table_name: str,
@@ -232,8 +214,6 @@ class TableAPI:
         finally:
             db.close()
 
-
-    # search for data in a table
     def search(
         self,
         table_name: str,
@@ -252,7 +232,6 @@ class TableAPI:
 
             if limit and len(results) > limit:
                 results = results[:limit]
-
             return {
                 "data": results,
                 "total": len(results),
@@ -261,8 +240,6 @@ class TableAPI:
         finally:
             db.close()
 
-
-    # apply pagination to data
     def _paginate(
         self,
         data: List[Dict],
@@ -276,7 +253,6 @@ class TableAPI:
         total = len(data)
         start = offset
         end = offset + limit if limit else total
-
         return {
             "data": data[start:end],
             "total": total,
@@ -285,14 +261,11 @@ class TableAPI:
             "has_more": end < total
         }
 
-
-# vector collection operations
 class VectorAPI:
     """
     API for vector collection operations.
     """
 
-    # list all vector collections with document counts
     def list_all(self) -> List[Dict[str, Any]]:
         """
         Get all vector collections with document counts.
@@ -308,8 +281,6 @@ class VectorAPI:
         finally:
             vdb.close()
 
-
-    # get information about a vector collection
     def _get_info(self, vdb: VectorDatabase, collection: Dict) -> Dict[str, Any]:
         """
         Get information about a vector collection.
@@ -330,8 +301,6 @@ class VectorAPI:
                 "metadata": collection.get('metadata', {})
             }
 
-
-    # get details about a vector collection
     def get_details(self, collection_name: str) -> Dict[str, Any]:
         """
         Get detailed information about a vector collection.
@@ -348,7 +317,6 @@ class VectorAPI:
                     "exists": False,
                     "error": "Collection not found"
                 }
-
             return {
                 "name": collection_name,
                 "exists": True,
@@ -364,8 +332,6 @@ class VectorAPI:
         finally:
             vdb.close()
 
-
-    # get documents from a vector collection
     def get_documents(
         self,
         collection_name: str,
@@ -394,8 +360,6 @@ class VectorAPI:
         finally:
             vdb.close()
 
-
-    # search for similar documents using vector similarity
     def search(
         self,
         collection_name: str,
@@ -428,8 +392,6 @@ class VectorAPI:
         finally:
             vdb.close()
 
-
-    # apply pagination to vector results
     def _paginate(
         self,
         results: Dict,
@@ -443,7 +405,6 @@ class VectorAPI:
         total = len(results.get("ids", []))
         start = offset
         end = offset + limit if limit else total
-
         return {
             "ids": results["ids"][start:end],
             "documents": results.get("documents", [])[start:end],
@@ -454,8 +415,6 @@ class VectorAPI:
             "has_more": end < total
         }
 
-
-    # format vector search results
     def _format_results(
         self,
         results: Dict,
@@ -480,15 +439,12 @@ class VectorAPI:
             }
             for i in range(len(ids))
         ]
-
         return {
             "results": formatted,
             "query": query_text,
             "n_results": n_results
         }
 
-
-    # format empty search results
     def _empty_result(self, error: Exception) -> Dict[str, Any]:
         """
         Return empty result with error.
@@ -502,15 +458,11 @@ class VectorAPI:
             "error": str(error)
         }
 
-
-# statistics
 class StatisticsAPI:
     """
     API for database statistics.
     """
 
-
-    # get all statistics
     def get_all(self) -> Dict[str, Any]:
         """
         Get comprehensive statistics for all databases.
@@ -524,11 +476,8 @@ class StatisticsAPI:
 
         self._collect_tables(stats)
         self._collect_collections(stats)
-
         return stats
 
-
-    # collect tables statistics
     def _collect_tables(self, stats: Dict[str, Any]) -> None:
         """
         Collect table statistics.
@@ -548,8 +497,6 @@ class StatisticsAPI:
         except Exception as error:
             stats["tables"]["error"] = str(error)
 
-
-    # collect collections statistics
     def _collect_collections(self, stats: Dict[str, Any]) -> None:
         """
         Collect collection statistics.
@@ -572,20 +519,18 @@ class StatisticsAPI:
                 try:
                     vdb.close()
                 except Exception:
-                    # Suppress close errors to avoid masking original exceptions
+                    # suppress close errors to avoid masking original exceptions
                     pass
 
-
-# main api class
 class DashboardAPI:
     """
     Main Dashboard API class providing access to all monitoring operations.
 
     Organizes functionality into logical groups:
-    - health: System health monitoring
-    - tables: Table operations
-    - vector: Vector collection operations
-    - statistics: Database-wide statistics
+        health: System health monitoring
+        tables: Table operations
+        vector: Vector collection operations
+        statistics: Database-wide statistics
 
     Example:
         api = DashboardAPI()
@@ -609,7 +554,6 @@ class DashboardAPI:
         stats = api.statistics.get_all()
     """
 
-    # initialize the dashboard API
     def __init__(self):
         """
         Initialize Dashboard API with all sub-APIs.
@@ -620,8 +564,6 @@ class DashboardAPI:
         self.vector = VectorAPI()
         self.statistics = StatisticsAPI()
 
-
-    # get quick summary of entire database system
     def get_summary(self) -> Dict[str, Any]:
         """
         Get quick summary of entire database system.
@@ -632,7 +574,6 @@ class DashboardAPI:
 
         health = self.health.check()
         stats = self.statistics.get_all()
-
         return {
             "status": health["status"],
             "timestamp": health["timestamp"],

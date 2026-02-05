@@ -4,15 +4,23 @@ Skypydb API Server
 
 import os
 import sys
-from typing import Dict, Any, Optional
-from fastapi import FastAPI, HTTPException, Header
+from typing import (
+    Dict,
+    Any,
+    Optional
+)
+from fastapi import (
+    FastAPI,
+    HTTPException,
+    Header
+)
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 # Add parent directory to path to import skypydb
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from skypydb.api.dashboard_api import DashboardAPI
+from skypydb.server.dashboard_server import DashboardAPI
 
 app = FastAPI(
     title="SkypyDB Dashboard API",
@@ -20,7 +28,6 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Enable CORS for the Next.js frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -28,11 +35,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Initialize API
 dashboard_api = DashboardAPI()
 
-# Update database paths from headers
 def update_db_paths(
     main_path: Optional[str],
     vector_path: Optional[str]
@@ -45,7 +49,6 @@ def update_db_paths(
         os.environ['SKYPYDB_PATH'] = main_path
     if vector_path:
         os.environ['SKYPYDB_VECTOR_PATH'] = vector_path
-
 
 @app.get("/api/health")
 async def health_check(
@@ -62,7 +65,6 @@ async def health_check(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @app.get("/api/summary")
 async def get_summary(
     x_skypydb_path: Optional[str] = Header(None),
@@ -77,7 +79,6 @@ async def get_summary(
         return dashboard_api.get_summary()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @app.get("/api/statistics")
 async def get_statistics(
@@ -94,8 +95,6 @@ async def get_statistics(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-# Table endpoints
 @app.get("/api/tables")
 async def list_tables(
     x_skypydb_path: Optional[str] = Header(None)
@@ -110,7 +109,6 @@ async def list_tables(
         return dashboard_api.tables.list_all()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @app.get("/api/tables/{table_name}/schema")
 async def get_table_schema(
@@ -127,7 +125,6 @@ async def get_table_schema(
         return dashboard_api.tables.get_schema(table_name)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @app.get("/api/tables/{table_name}/data")
 async def get_table_data(
@@ -147,7 +144,6 @@ async def get_table_data(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @app.get("/api/tables/{table_name}/search")
 async def search_table(
     table_name: str,
@@ -166,8 +162,6 @@ async def search_table(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-# Vector collection endpoints
 @app.get("/api/collections")
 async def list_collections(
     x_skypydb_vector_path: Optional[str] = Header(None)
@@ -219,7 +213,6 @@ async def get_collection_documents(
         offset = body.get('offset', 0)
         document_ids = body.get('document_ids')
         metadata_filter = body.get('metadata_filter')
-
         return dashboard_api.vector.get_documents(
             collection_name,
             document_ids=document_ids,
@@ -229,7 +222,6 @@ async def get_collection_documents(
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @app.post("/api/collections/{collection_name}/search")
 async def search_vectors(
@@ -258,7 +250,6 @@ async def search_vectors(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
 if __name__ == "__main__":
     print("Starting SkypyDB API Server.")
     print("API will be available at: http://localhost:8000/api")
@@ -273,4 +264,8 @@ if __name__ == "__main__":
     print("  - POST /api/collections/{name}/search")
     print("\nPress Ctrl+C to stop")
     
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=8000
+    )

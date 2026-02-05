@@ -1,9 +1,10 @@
 import os
 import skypydb
+from skypydb.errors import TableAlreadyExistsError
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
-load_dotenv()
+load_dotenv(".env.local")
 
 # Load encryption key from environment
 encryption_key = os.getenv("ENCRYPTION_KEY") # create a encryption key and make it available in .env file before using it, don't show this key to anyone
@@ -22,7 +23,15 @@ client = skypydb.Client(
 )
 
 # All operations work the same - encryption is transparent!
-tables = client.create_table()
+try:
+    tables = client.create_table()
+# if the tables already exists the programe get them instead
+except TableAlreadyExistsError:
+    tables = {
+        "success": client.get_table("success"),
+        "warning": client.get_table("warning"),
+        "error": client.get_table("error"),
+    }
 
 # Access your tables
 success_table = tables["success"]
@@ -39,8 +48,11 @@ success_table.add(
 
 # Data is automatically decrypted when retrieved
 user_success_logs = success_table.search(
-    index="by_user",
     user_id="user123"
 )
-for user_success_log in user_success_logs:
-    print(user_success_log)
+
+if not user_success_logs:
+    print("No results found.")
+else:
+    for user_success_log in user_success_logs:
+        print(user_success_log)

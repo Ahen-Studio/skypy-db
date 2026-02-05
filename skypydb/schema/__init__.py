@@ -1,25 +1,23 @@
 """
 Schema module for Skypydb.
-Provides schema definition tools.
 """
 
-from .schema import (
-    Schema,
-    TableDefinition,
+from skypydb.schema.schema import TableDefinition
+from skypydb.schema.mixins.schema import (
     defineSchema,
     defineTable,
+    SysSchema
 )
-from .values import (
+from skypydb.schema.values import (
     Validator,
-    v,
+    v
 )
-
 
 __all__ = [
     "defineSchema",
     "defineTable",
-    "Schema",
+    "SysSchema",
     "TableDefinition",
     "Validator",
-    "v",
+    "v"
 ]

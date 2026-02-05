@@ -46,6 +46,7 @@ pip install skypydb # python client
 
 ## TODO
 
+- [ ] Continue the refactoring on the api folder, the cli folder and the dashboard folder.
 - [ ] Create the dashboard using Next.js and shadcn-ui
 - [ ] update the documentation
 
@@ -143,13 +144,22 @@ schema = defineSchema({
 
 ```python
 import skypydb
+from skypydb.errors import TableAlreadyExistsError
 
 # Create a client
 client = skypydb.Client()
 
 # Create tables from the schema
 # This reads the schema from skypydb/schema.py and creates all tables
-tables = client.create_table()
+try:
+    tables = client.create_table()
+# if the tables already exists the programe get them instead
+except TableAlreadyExistsError:
+    tables = {
+        "success": client.get_table("success"),
+        "warning": client.get_table("warning"),
+        "error": client.get_table("error"),
+    }
 
 # Access your tables
 success_table = tables["success"]
@@ -187,12 +197,16 @@ error_table.add(
 - after adding data to your database you can search specific data using the search method
 
 ```python
+# Search results by filter
 user_success_logs = success_table.search(
-    index="by_user",
     user_id="user123"
 )
-for user_success_log in user_success_logs:
-    print(user_success_log)
+
+if not user_success_logs:
+    print("No results found.")
+else:
+    for user_success_log in user_success_logs:
+        print(user_success_log)
 ```
 
 - you can also delete specific data from your database using the delete method
@@ -215,7 +229,7 @@ import skypydb
 client = skypydb.VectorClient()
 
 # Create a collection
-collection = client.create_collection("my-documents")
+collection = client.get_or_create_collection("my-documents")
 
 # Add documents (automatically embedded using Ollama)
 collection.add(
@@ -231,10 +245,11 @@ results = collection.query(
 )
 
 # Access results
-for i, doc_id in enumerate(results["ids"][0]):
-    print(f"ID: {doc_id}")
-    print(f"Document: {results['documents'][0][i]}")
-    print(f"Distance: {results['distances'][0][i]}")
+if not results:
+    print("No results found.")
+else:
+    for i, doc_id in enumerate(results["ids"][0]):
+        print(f"{doc_id}, {results['documents'][0][i]}, {results['distances'][0][i]}")
 ```
 
 ### Mem0
@@ -310,10 +325,11 @@ print(salt) # don't show this salt to anyone
 ```python
 import os
 import skypydb
+from skypydb.errors import TableAlreadyExistsError
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
-load_dotenv()
+load_dotenv(".env.local")
 
 # Load encryption key from environment
 encryption_key = os.getenv("ENCRYPTION_KEY") # create a encryption key and make it available in .env file before using it, don't show this key to anyone
@@ -332,7 +348,15 @@ client = skypydb.Client(
 )
 
 # All operations work the same - encryption is transparent!
-tables = client.create_table()
+try:
+    tables = client.create_table()
+# if the tables already exists the programe get them instead
+except TableAlreadyExistsError:
+    tables = {
+        "success": client.get_table("success"),
+        "warning": client.get_table("warning"),
+        "error": client.get_table("error"),
+    }
 
 # Access your tables
 success_table = tables["success"]
@@ -349,11 +373,14 @@ success_table.add(
 
 # Data is automatically decrypted when retrieved
 user_success_logs = success_table.search(
-    index="by_user",
     user_id="user123"
 )
-for user_success_log in user_success_logs:
-    print(user_success_log)
+
+if not user_success_logs:
+    print("No results found.")
+else:
+    for user_success_log in user_success_logs:
+        print(user_success_log)
 ```
 
 Learn more on our [Docs](https://ahen.mintlify.app/)

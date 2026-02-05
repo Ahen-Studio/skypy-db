@@ -6,10 +6,10 @@ import importlib
 import importlib.util
 import os
 from typing import Dict, Optional
-from skypydb.database.database import Database
+from skypydb.database.reactive_db import ReactiveDatabase
 from skypydb.errors import TableAlreadyExistsError, TableNotFoundError
 from skypydb.table.table import Table
-from skypydb.schema import Schema
+from skypydb.schema import SysSchema
 
 # constant to define the path to the database file
 DB_PATH = "./db/_generated/skypydb.db"
@@ -67,7 +67,7 @@ class Client:
             os.makedirs(db_dir, exist_ok=True)
 
         self.path = DB_PATH
-        self.db = Database(DB_PATH, encryption_key=encryption_key, salt=salt, encrypted_fields=encrypted_fields)
+        self.db = ReactiveDatabase(DB_PATH, encryption_key=encryption_key, salt=salt, encrypted_fields=encrypted_fields)
 
 
     # create a table
@@ -124,7 +124,7 @@ class Client:
                 "using: schema = defineSchema({...})"
             )
 
-        if not isinstance(schema, Schema):
+        if not isinstance(schema, SysSchema):
             raise ValueError(
                 f"Expected a Schema object, got {type(schema).__name__}"
             )
@@ -142,7 +142,7 @@ class Client:
             if table_def is None:
                 continue
             # Create table with schema definition
-            self.db.create_table_from_schema(table_name, table_def)
+            self.db.create_table(table_name, table_def)
             created_tables[table_name] = Table(self.db, table_name)
 
         return created_tables

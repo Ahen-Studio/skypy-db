@@ -2,11 +2,10 @@
 Database module.
 """
 
-from .database import Database
-from .vector_database import VectorDatabase
-
+from .reactive_db import ReactiveDatabase
+from .vector_db import VectorDatabase
 
 __all__ = [
-    "Database",
+    "ReactiveDatabase",
     "VectorDatabase"
 ]
