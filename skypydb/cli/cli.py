@@ -2,25 +2,29 @@
 Cli for Skypydb.
 """
 
-import base64
+from io import BytesIO
 from pathlib import Path
-from typing import Optional
+from urllib.error import (
+    HTTPError,
+    URLError
+)
+from urllib.request import (
+    Request,
+    urlopen
+)
+from zipfile import ZipFile
+from pathlib import PurePosixPath
 import typer
 import questionary
 from rich import print
-from skypydb.cli.start_dashboard import start_dashboard
 from skypydb.security import EncryptionManager
 from skypydb import __version__
 
-
-# initialize the cli app
 app = typer.Typer(
     name="skypydb",
     help="Skypydb CLI - Open Source Reactive and Vector Embedding Database"
 )
 
-
-# main class for Skypy Cli
 class SkypyCLI:
     """
     Skypy CLI class to manage CLI operations.
@@ -32,6 +36,8 @@ class SkypyCLI:
         skypydb_folder: str = "db",
         generated_folder: str = "_generated",
         schema_file_name: str = "schema.py",
+        repo_zip_url: str = "https://github.com/Ahen-Studio/skypy-db/archive/refs/heads/main.zip",
+        repo_dashboard_path: str = "dashboard",
         gitignore_path: str = ".gitignore",
         gitignore_entry: str = ".env.local",
         cwd: Path = Path.cwd(),
@@ -44,38 +50,12 @@ class SkypyCLI:
         self.skypydb_folder = skypydb_folder
         self.generated_folder = generated_folder
         self.schema_file_name = schema_file_name
+        self.repo_zip_url = repo_zip_url
+        self.repo_dashboard_path = repo_dashboard_path.strip("/\\")
         self.gitignore_path = gitignore_path
         self.gitignore_entry = gitignore_entry
         self.cwd = cwd
 
-
-    # launch the dashboard
-    def launch_dashboard(
-        self,
-        api_port: int = 8000,
-        dashboard_port: int = 3000,
-        db_path: Optional[str] = None,
-        vector_db_path: Optional[str] = None,
-    ) -> None:
-        """
-        Launch the dashboard.
-        
-        Args:
-            api_port: Port for the API server
-            dashboard_port: Port for the dashboard frontend
-            db_path: Path to the main database file
-            vector_db_path: Path to the vector database file
-        """
-
-        start_dashboard(
-            api_port=api_port,
-            dashboard_port=dashboard_port,
-            db_path=db_path,
-            vector_db_path=vector_db_path,
-        )
-
-
-    # initialize project with encryption keys and project structure
     def init_project(self) -> None:
         """
         Initialize project with encryption keys and project structure.
@@ -84,60 +64,50 @@ class SkypyCLI:
         # create project structure
         self._create_project_structure()
 
-        # generate and save encryption keys
-        self._generate_encryption_keys()
+        # generate, save encryption keys and update .gitignore
+        self._generate_encryption_keys_and_update_gitignore()
 
-        # update .gitignore
-        self._update_gitignore()
+        # download the dashboard folder from GitHub
+        self._download_dashboard_folder()
 
-        # print success messages
-        self._print_success_messages()
+        print(f"Write your Skypydb functions in {Path(self.skypydb_folder) / self.schema_file_name}")
+        print("Give us feedback at https://github.com/Ahen-Studio/skypy-db/issues")
 
-
-    # create project structure
     def _create_project_structure(self) -> None:
         """
         Create the project directory structure.
         """
 
-        # Create db folder
+        # create db folder
         skypydb_dir = self.cwd / self.skypydb_folder
         if not skypydb_dir.exists():
             skypydb_dir.mkdir(exist_ok=True)
 
-        # Create _generated folder
+        # create _generated folder
         generated_dir = skypydb_dir / self.generated_folder
         if not generated_dir.exists():
             generated_dir.mkdir(exist_ok=True)
 
-        # Create schema.py file
+        # create schema.py file
         schema_file = skypydb_dir / self.schema_file_name
         if not schema_file.exists():
             schema_file.write_text("", encoding="utf-8")
 
+        print("[green]✔ Initialized project[/green]")
 
-    # generate and save encryption keys
-    def _generate_encryption_keys(self) -> None:
+    def _generate_encryption_keys_and_update_gitignore(self) -> None:
         """
-        Generate and save encryption keys to .env.local.
+        Generate and save encryption keys to .env.local and update the gitignore file to untrack the .env.local file.
         """
 
         # generate encryption key and encode the salt key with base64
         encryption_key = EncryptionManager.generate_key()
         salt_key = EncryptionManager.generate_salt()
-        salt_b64 = base64.b64encode(salt_key).decode("utf-8")
 
         # save encryption key and salt key to .env.local
         env_path = self.cwd / self.env_file_name
-        content = f"ENCRYPTION_KEY={encryption_key}\nSALT_KEY={salt_b64}\n"
+        content = f"ENCRYPTION_KEY={encryption_key}\nSALT_KEY={salt_key}\n"
         env_path.write_text(content, encoding="utf-8")
-
-
-    # update .gitignore
-    def _update_gitignore(self) -> None:
-        """
-        Add .env.local to .gitignore.
-        """
 
         # generate .gitignore if not exists
         gitignore_path = self.cwd / self.gitignore_path
@@ -148,33 +118,76 @@ class SkypyCLI:
             content = f"{content.rstrip()}\n{self.gitignore_entry}\n" if content else f"{self.gitignore_entry}\n"
             gitignore_path.write_text(content, encoding="utf-8")
 
-
-    # print success messages
-    def _print_success_messages(self) -> None:
-        """
-        Print the success messages after project initialization.
-        """
-
-        print("[green]✔ Initialized project[/green]")
-        print("[green]✔ Provisioned encryption keys and saved its:[/green]")
+        print("[green]✔ Encryption keys provided and saved:[/green]")
         print("    encryption key as ENCRYPTION_KEY")
         print("    salt key as SALT_KEY")
-        print(f" to {self.env_file_name}")
-        print(f'[green]  Added "{self.env_file_name}" to {self.gitignore_path}[/green]\n')
-        print(f"Write your Skypydb functions in {Path(self.skypydb_folder) / self.schema_file_name}")
-        print("Give us feedback at https://github.com/Ahen-Studio/skypy-db/issues")
+        print(f"to {self.env_file_name}")
+        print(f'[bold bright_black]Added "{self.env_file_name}" to {self.gitignore_path}[/bold bright_black]\n')
 
+    def _download_dashboard_folder(self) -> None:
+        """
+        Download the dashboard folder from the GitHub repo zip into the generated directory.
+        """
 
-# start skypydb development mode
+        if not self.repo_zip_url or not self.repo_dashboard_path:
+            return
+
+        generated_dir = self.cwd / self.skypydb_folder / self.generated_folder
+        target_root = generated_dir / self.repo_dashboard_path
+
+        try:
+            request = Request(
+                self.repo_zip_url,
+                headers={"User-Agent": "skypydb-cli"}
+            )
+            with urlopen(request) as response:
+                zip_bytes = BytesIO(response.read())
+        except (HTTPError, URLError) as exc:
+            print(f"[yellow]Warning: failed to download dashboard folder. {exc}[/yellow]")
+            return
+
+        created_files = 0
+        skipped_files = 0
+
+        with ZipFile(zip_bytes) as archive:
+            names = archive.namelist()
+            repo_root = names[0].split("/")[0] if names else None
+            if not repo_root:
+                print("[yellow]Warning: unexpected zip format (missing root).[/yellow]")
+                return
+            prefix = f"{repo_root}/{self.repo_dashboard_path}/"
+            for info in archive.infolist():
+                if not info.filename.startswith(prefix):
+                    continue
+                relative = info.filename[len(prefix):]
+                if not relative:
+                    continue
+                rel_path = PurePosixPath(relative)
+                if ".." in rel_path.parts:
+                    continue
+                target_path = target_root / Path(*rel_path.parts)
+                if info.is_dir():
+                    target_path.mkdir(parents=True, exist_ok=True)
+                elif target_path.exists():
+                    skipped_files += 1
+                else:
+                    target_path.parent.mkdir(parents=True, exist_ok=True)
+                    with archive.open(info) as src:
+                        target_path.write_bytes(src.read())
+                    created_files += 1
+        if created_files:
+            print(f"[green]✔ Downloaded dashboard folder to {target_root}[/green]")
+        if skipped_files:
+            print(f"[yellow]Skipped {skipped_files} existing file(s) in {target_root}[/yellow]")
+
 @app.command()
 def dev() -> None:
     """
-    Start Skypydb development mode.
+    Start Skypydb interactive mode.
     """
 
     cli = SkypyCLI()
 
-    # Show welcome prompt
     choices = [
         questionary.Choice(title="create a new project", value="create"),
         questionary.Choice(title="launch the dashboard", value="dashboard"),
@@ -191,15 +204,11 @@ def dev() -> None:
     if selection is None or selection == "exit":
         print("\n[yellow]Exiting.[/yellow]")
         raise typer.Exit(code=0)
-
     if selection == "create":
         cli.init_project()
-
     elif selection == "dashboard":
-        cli.launch_dashboard()
+        pass
 
-
-# show the skypydb version and exit
 def _version_callback(value: bool) -> None:
     """
     Show the skypydb version and exit.
@@ -209,8 +218,6 @@ def _version_callback(value: bool) -> None:
         print(f"skypydb {__version__}")
         raise typer.Exit()
 
-
-# callback for cli app
 @app.callback()
 def main_callback(
     version: bool = typer.Option(
@@ -222,13 +229,11 @@ def main_callback(
     )
 ) -> None:
     """
-    Skypydb CLI - Open Source Reactive and Vector Embedding Database.
+    Main cli callback.
     """
 
     pass
 
-
-# Main loop
 def main() -> None:
     """
     Main entry point for the CLI.
