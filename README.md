@@ -18,7 +18,7 @@
 </div>
 
 ```bash
-pip install skypydb # python client
+pip install skypydb # python database
 # or download from the source
 # git clone https://github.com/Ahen-Studio/skypy-db.git
 # cd skypy-db
@@ -46,7 +46,7 @@ pip install skypydb # python client
 ## TODO
 
 - [ ] Create the dashboard using Next.js and shadcn-ui
-- [ ] Update the documentation
+- [ ] Add get_or_create_table argument for the reactive client
 
 ## What's next!
 
