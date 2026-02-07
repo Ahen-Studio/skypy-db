@@ -130,7 +130,7 @@ class HealthAPI:
 
         try:
             db = DatabaseConnection.get_main()
-            table_count = len(db.get_all_tables())
+            table_count = len(db.get_all_tables_names())
             db.close()
 
             status["databases"]["main"] = {
@@ -515,7 +515,7 @@ class StatisticsAPI:
 
         try:
             db = DatabaseConnection.get_main()
-            table_names = db.get_all_tables()
+            table_names = db.get_all_tables_names()
 
             stats["tables"]["count"] = len(table_names)
             stats["tables"]["total_rows"] = sum(
