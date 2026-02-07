@@ -36,7 +36,7 @@ class VectorClient(
         Initialize Vector Client.
 
         Args:
-            path: Path to the database file. Defaults to ./db/_generated/skypydb.db
+            path: Path to the database file. Defaults to ./db/_generated/vector.db
             embedding_model: Ollama model to use for embeddings (default: mxbai-embed-large)
             ollama_base_url: Base URL for Ollama API (default: http://localhost:11434)
 
