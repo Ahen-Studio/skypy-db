@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 from pydantic import BaseModel
 
 try:
-    import skypydb
+    from skypydb.api.vector_client import VectorClient
 except ImportError:
     raise ImportError("The 'skypydb' library is required. Please install it using 'pip install skypydb'.")
 
@@ -23,7 +23,7 @@ class SkypyDB(VectorStoreBase):
     def __init__(
         self,
         collection_name: str,
-        client: Optional[skypydb.VectorClient] = None,
+        client: Optional[VectorClient] = None,
         path: Optional[str] = None,
         embedding_model: str = "mxbai-embed-large",
         ollama_base_url: str = "http://localhost:11434",
@@ -44,7 +44,7 @@ class SkypyDB(VectorStoreBase):
             if path is None:
                 path = "./db/_generated/mem0_vector.db"
 
-            self.client = skypydb.VectorClient(
+            self.client = VectorClient(
                 path=path,
                 embedding_model=embedding_model,
                 ollama_base_url=ollama_base_url,

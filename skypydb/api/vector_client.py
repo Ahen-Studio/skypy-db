@@ -28,6 +28,7 @@ class VectorClient(
 
     def __init__(
         self,
+        path: str = "./db/_generated/vector.db",
         embedding_model: str = "mxbai-embed-large",
         ollama_base_url: str = "http://localhost:11434"
     ):
@@ -35,7 +36,7 @@ class VectorClient(
         Initialize Vector Client.
 
         Args:
-            path: Path to the database directory. Defaults to ./db/_generated/vector.db
+            path: Path to the database file. Defaults to ./db/_generated/vector.db
             embedding_model: Ollama model to use for embeddings (default: mxbai-embed-large)
             ollama_base_url: Base URL for Ollama API (default: http://localhost:11434)
 
@@ -48,7 +49,7 @@ class VectorClient(
         """
 
         # constant to define the path to the database file
-        DB_PATH = "./db/_generated/skypydb.db"
+        DB_PATH = path
 
         db_dir = os.path.dirname(DB_PATH)
         if db_dir and not os.path.exists(db_dir):

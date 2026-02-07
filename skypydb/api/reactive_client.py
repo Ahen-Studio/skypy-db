@@ -22,6 +22,7 @@ class ReactiveClient(
 
     def __init__(
         self,
+        path: str = "./db/_generated/skypydb.db",
         encryption_key: Optional[str] = None,
         salt: Optional[bytes] = None,
         encrypted_fields: Optional[list] = None
@@ -30,6 +31,7 @@ class ReactiveClient(
         Initialize Skypydb client.
 
         Args:
+            path: Path to the database file. Defaults to ./db/_generated/skypydb.db
             encryption_key: Optional encryption key for data encryption at rest.
                            If provided, sensitive data will be encrypted.
                            Generate a secure key with: EncryptionManager.generate_key()
@@ -58,7 +60,7 @@ class ReactiveClient(
         """
 
         # constant to define the path to the database file
-        DB_PATH = "./db/_generated/skypydb.db"
+        DB_PATH = path
 
         db_dir = os.path.dirname(DB_PATH)
         if db_dir and not os.path.exists(db_dir):

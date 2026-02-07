@@ -3,6 +3,7 @@ Dashboard API for monitoring Skypydb databases.
 """
 
 import os
+from pathlib import Path
 import time
 from typing import (
     Dict,
@@ -53,12 +54,38 @@ class DatabaseConnection:
     """
 
     @staticmethod
+    def _resolve_db_path(env_key: str, default_relative: str) -> str:
+        """
+        Resolve a database path from env, normalizing to an absolute path.
+        """
+
+        base = Path.cwd()
+        raw = os.environ.get(env_key)
+        if raw:
+            path = Path(raw)
+            return str(path if path.is_absolute() else (base / path).resolve())
+        default_path = (base / default_relative).resolve()
+        if default_path.exists():
+            return str(default_path)
+
+        generated_dir = (base / "db" / "_generated")
+        if generated_dir.exists():
+            candidates = sorted(p for p in generated_dir.glob("*.db") if p.is_file())
+            if candidates:
+                return str(candidates[0].resolve())
+
+        return str(default_path)
+
+    @staticmethod
     def get_main() -> ReactiveDatabase:
         """
         Get main database instance from environment.
         """
 
-        path = os.environ.get('SKYPYDB_PATH', './db/_generated/skypydb.db')
+        path = DatabaseConnection._resolve_db_path(
+            "SKYPYDB_PATH",
+            "db/_generated/skypydb.db"
+        )
         return ReactiveDatabase(path)
 
     @staticmethod
@@ -67,7 +94,10 @@ class DatabaseConnection:
         Get vector database instance from environment.
         """
 
-        path = os.environ.get('SKYPYDB_VECTOR_PATH', './db/_generated/vector.db')
+        path = DatabaseConnection._resolve_db_path(
+            "SKYPYDB_VECTOR_PATH",
+            "db/_generated/vector.db"
+        )
         return VectorDatabase(path)
 
 class HealthAPI:
@@ -155,7 +185,7 @@ class TableAPI:
         db = DatabaseConnection.get_main()
         
         try:
-            table_names = db.get_all_tables()
+            table_names = db.get_all_tables_names()
             return [self._get_info(db, name) for name in table_names]
         finally:
             db.close()

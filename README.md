@@ -45,9 +45,8 @@ pip install skypydb # python client
 
 ## TODO
 
-- [ ] fix potential errors in the dashboard api /tables
 - [ ] Create the dashboard using Next.js and shadcn-ui
-- [ ] update the documentation
+- [ ] Update the documentation
 
 ## What's next!
 
