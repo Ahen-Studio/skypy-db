@@ -79,6 +79,18 @@ class DatabaseConnection:
         return str(default_path)
 
     @staticmethod
+    def _require_existing(path: str, label: str) -> None:
+        """
+        Ensure the database file exists before connecting.
+        """
+
+        if not Path(path).exists():
+            raise FileNotFoundError(
+                f"{label} database file not found at: {path}. "
+                "Set the correct path with the request headers or env vars."
+            )
+
+    @staticmethod
     def get_main() -> ReactiveDatabase:
         """
         Get main database instance from environment.
@@ -88,6 +100,7 @@ class DatabaseConnection:
             "SKYPYDB_PATH",
             "db/_generated/skypydb.db"
         )
+        DatabaseConnection._require_existing(path, "Main")
         return ReactiveDatabase(path)
 
     @staticmethod
@@ -100,6 +113,7 @@ class DatabaseConnection:
             "SKYPYDB_VECTOR_PATH",
             "db/_generated/vector.db"
         )
+        DatabaseConnection._require_existing(path, "Vector")
         return VectorDatabase(path)
 
 class HealthAPI:
